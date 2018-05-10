@@ -14,7 +14,6 @@ using namespace pegtl;
 namespace L3{
 
     std::vector<L3::L3_Item*> parsedItems;
-    L3::Instruction* currentInstruction;
 
     L3_Item* pop_item(){
         auto ret = parsedItems.back();
@@ -315,21 +314,18 @@ namespace L3{
         parsedItems.push_back(n);
     }
 
-    // vector<L3_Item*> subvector(vector<L3_Item*>& vec, int start, int end){
-    //     auto first = vec.begin() + start;
-    //     auto last = vec.begin() + end;
-        
-    //     return vector<L3_Item*> (first, last);
-    // }
-
-    vector<L3_Item*> pop_args(int numArgs){
-        auto vec = vector<L3_Item*>( parsedItems.end()-numArgs, parsedItems.end() );
-        parsedItems.resize(parsedItems.size() - numArgs );
-        return vec;
+    void instructionAction(Instruction* i, Program& p){
+        i->args = parsedItems;
+        parsedItems.clear();
+        p.functions.back()->instructions.push_back(i);
     }
 
     template< typename Rule >
     struct action : pegtl::nothing< Rule > {};
+
+    /*
+        L3_Item Actions
+    */
 
     template<> struct action < number > {
         template< typename Input >
@@ -381,33 +377,85 @@ namespace L3{
         }
     };
 
+    /*
+        Instruction Actions
+    */
+
     template<> struct action < assign_i > {
         template< typename Input >
         static void apply( const Input & in, L3::Program & p){
-            currentInstruction = new Assign_I();
-            currentInstruction->args = pop_args(2);
+            instructionAction(new Assign_I(), p);
         }
     };
 
     template<> struct action < return_i > {
         template< typename Input >
         static void apply( const Input & in, L3::Program & p){
-            currentInstruction = new Return_I();
+            instructionAction( new Return_I() , p);
         }
     };
 
     template<> struct action < return_var_i > {
         template< typename Input >
         static void apply( const Input & in, L3::Program & p){
-            currentInstruction = new Return_Value_I();
-            currentInstruction->args.push_back(pop_item());
+            instructionAction(new Return_Value_I(), p);
         }
     };
 
-    template<> struct action < instructionRule > {
+    
+    template<> struct action < assign_call_i > {
         template< typename Input >
         static void apply( const Input & in, L3::Program & p){
-            p.functions.back()->instructions.push_back(currentInstruction);
+            instructionAction(new Assign_Call_I(), p);
+        }
+    };
+
+    template<> struct action < assign_comp_i > {
+        template< typename Input >
+        static void apply( const Input & in, L3::Program & p){
+            instructionAction(new Assign_Op_I(), p);
+        }
+    };
+
+    template<> struct action < assign_op_i > {
+        template< typename Input >
+        static void apply( const Input & in, L3::Program & p){
+            instructionAction(new Assign_Op_I(), p);
+        }
+    };
+
+    template<> struct action < load_i > {
+        template< typename Input >
+        static void apply( const Input & in, L3::Program & p){
+            instructionAction(new Load_I(), p);
+        }
+    };
+
+    template<> struct action < store_i > {
+        template< typename Input >
+        static void apply( const Input & in, L3::Program & p){
+            instructionAction(new Store_I(), p);
+        }
+    };
+
+    template<> struct action < conditional_branch_i > {
+        template< typename Input >
+        static void apply( const Input & in, L3::Program & p){
+            instructionAction(new Conditional_Branch_I(), p);
+        }
+    };
+
+    template<> struct action < call_i > {
+        template< typename Input >
+        static void apply( const Input & in, L3::Program & p){
+            instructionAction(new Call_I(), p);
+        }
+    };
+
+    template<> struct action < label_i > {
+        template< typename Input >
+        static void apply( const Input & in, L3::Program & p){
+            instructionAction(new Label_I(), p);
         }
     };
 
