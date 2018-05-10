@@ -35,25 +35,40 @@ namespace L3{
             > 
         > {};
     
+    struct keyword:
+        pegtl::sor<
+            TAOCPP_PEGTL_STRING("return"),
+            TAOCPP_PEGTL_STRING("call"),
+            TAOCPP_PEGTL_STRING("br"),
+            TAOCPP_PEGTL_STRING("store"),
+            TAOCPP_PEGTL_STRING("load"),
+            TAOCPP_PEGTL_STRING("print"),
+            TAOCPP_PEGTL_STRING("array-error"),
+            TAOCPP_PEGTL_STRING("allocate")
+        > {};
+
     struct var:
         pegtl::seq<
-        pegtl::plus< 
-            pegtl::sor<
-            pegtl::alpha,
-            pegtl::one< '_' >
+            pegtl::plus< 
+                pegtl::sor<
+                pegtl::alpha,
+                pegtl::one< '_' >
+                >
+            >,
+            pegtl::star<
+                pegtl::sor<
+                pegtl::alpha,
+                pegtl::one< '_' >,
+                pegtl::digit
+                >
             >
-        >,
-        pegtl::star<
-            pegtl::sor<
-            pegtl::alpha,
-            pegtl::one< '_' >,
-            pegtl::digit
-            >
-        >
         >{};
 
     struct variable:
-        var{};
+        pegtl::seq<
+            pegtl::not_at< keyword >,
+            var
+        > {};
 
     struct label:
         pegtl::seq<
@@ -250,7 +265,6 @@ namespace L3{
             call
         >{};
 
-
     struct instructionRule:
         pegtl::seq<
             seps,
@@ -294,7 +308,6 @@ namespace L3{
             pegtl::one< '}'>,
             seps
         > {};
-
 
     struct entryPointRule:
         pegtl::seq<
@@ -401,7 +414,6 @@ namespace L3{
             instructionAction(new Return_Value_I(), p);
         }
     };
-
     
     template<> struct action < assign_call_i > {
         template< typename Input >
