@@ -1,226 +1,60 @@
 (:main
 (:main
-	0 0
-	mem rsp -8 <- :call_label0 
-	rdi <- 20 
-	call :loop1 1 
-	:call_label0 
+	0 1
+	rdi <- 5 
+	rsi <- 5 
+	cjump rdi = rsi :choice1 :choice2 
+	:choice1 
+	call allocate 2 
 	r8 <- rax 
-	mem rsp -8 <- :call_label1 
-	rdi <- r8 
-	call :encode 1 
-	:call_label1 
+	mem rsp 0 <- r8 
+	r8 <- mem rsp 0 
+	r8 &= 1 
+	mem rsp 0 <- r8 
+	r8 <- mem rsp 0 
+	cjump r8 = 0 :isArray :isnotArray 
+	:isArray 
 	r8 <- rax 
-	rdi <- r8 
-	call print 1 
-	mem rsp -8 <- :call_label2 
-	rdi <- -20 
-	call :loop2 1 
-	:call_label2 
-	r8 <- rax 
-	mem rsp -8 <- :call_label3 
-	rdi <- r8 
-	call :encode 1 
-	:call_label3 
-	r8 <- rax 
+	mem rsp 0 <- r8 
+	r8 <- mem rsp 0 
+	mem r8 8 <- 7 
+	r8 <- mem rsp 0 
+	mem r8 16 <- 9 
+	r8 <- mem rsp 0 
 	rdi <- r8 
 	call print 1 
-	mem rsp -8 <- :call_label4 
-	rdi <- 100 
-	call :loop3 1 
-	:call_label4 
-	r8 <- rax 
-	mem rsp -8 <- :call_label5 
-	rdi <- r8 
-	call :encode 1 
-	:call_label5 
-	r8 <- rax 
-	rdi <- r8 
+	r8 <- mem rsp 0 
+	rdi <- mem r8 0 
+	mem rsp -8 <- :encodeArraySize_ret 
+	call :encodeArraySize 1 
+	:encodeArraySize_ret 
+	rdi <- rax 
 	call print 1 
-	mem rsp -8 <- :call_label6 
-	rdi <- 20 
-	call :loop4 1 
-	:call_label6 
-	r8 <- rax 
-	mem rsp -8 <- :call_label7 
-	rdi <- r8 
-	call :encode 1 
-	:call_label7 
-	r8 <- rax 
-	rdi <- r8 
+	:choice2 
+	rdi <- 5 
+	rsi <- 7 
+	mem rsp -8 <- :generate3Darray_ret 
+	call :generate3Darray 2 
+	:generate3Darray_ret 
+	:isnotArray 
+	return 
+)(:encodeArraySize
+	1 0
+	rdi <<= 1 
+	rdi += 1 
+	rax <- rdi 
+	return 
+)(:generate3Darray
+	2 0
+	call allocate 2 
+	rdi <- 5 
+	rsi <- rax 
+	call allocate 2 
+	rdi <- 5 
+	rsi <- rax 
+	call allocate 2 
+	rdi <- rax 
 	call print 1 
-	mem rsp -8 <- :call_label8 
-	rdi <- 248 
-	call :loop5 1 
-	:call_label8 
-	r8 <- rax 
-	mem rsp -8 <- :call_label9 
-	rdi <- r8 
-	call :encode 1 
-	:call_label9 
-	r8 <- rax 
-	rdi <- r8 
-	call print 1 
-	mem rsp -8 <- :call_label10 
-	rdi <- 19 
-	call :loop6 1 
-	:call_label10 
-	r8 <- rax 
-	mem rsp -8 <- :call_label11 
-	rdi <- r8 
-	call :encode 1 
-	:call_label11 
-	r8 <- rax 
-	rdi <- r8 
-	call print 1 
-	mem rsp -8 <- :call_label12 
-	rdi <- 15 
-	call :loop7 1 
-	:call_label12 
-	r8 <- rax 
-	mem rsp -8 <- :call_label13 
-	rdi <- r8 
-	call :encode 1 
-	:call_label13 
-	r8 <- rax 
-	rdi <- r8 
-	call print 1 
-	mem rsp -8 <- :call_label14 
-	rdi <- -61254 
-	call :loop8 1 
-	:call_label14 
-	r8 <- rax 
-	mem rsp -8 <- :call_label15 
-	rdi <- r8 
-	call :encode 1 
-	:call_label15 
-	r8 <- rax 
-	rdi <- r8 
-	call print 1 
-	return 
-)(:loop1
-	1 0
-	r10 <- rdi 
-	r8 <- 0 
-	:call_label16 
-	r10 <- r10 
-	r10 -= 1 
-	r8 <- r8 
-	r8 += 1 
-	r9 <- r10 = 0 
-	cjump r9 = 1 :call_label17 :call_label16 
-	:call_label17 
-	rax <- r8 
-	return 
-)(:loop2
-	1 0
-	r10 <- rdi 
-	r8 <- 0 
-	:call_label18 
-	r10 <- r10 
-	r10 += 2 
-	r8 <- r8 
-	r8 += 1 
-	r9 <- r10 = 0 
-	cjump r9 = 1 :call_label19 :call_label18 
-	:call_label19 
-	rax <- r8 
-	return 
-)(:loop3
-	1 0
-	r10 <- rdi 
-	r8 <- 0 
-	:call_label20 
-	r10 <- r10 
-	r10 >>= 1 
-	r8 <- r8 
-	r8 += 1 
-	r9 <- r10 = 0 
-	cjump r9 = 1 :call_label21 :call_label20 
-	:call_label21 
-	rax <- r8 
-	return 
-)(:loop4
-	1 0
-	r10 <- rdi 
-	r8 <- 0 
-	:call_label22 
-	r10 <- r10 
-	r10 *= 0 
-	r8 <- r8 
-	r8 += 1 
-	r9 <- r10 = 0 
-	cjump r9 = 1 :call_label23 :call_label22 
-	:call_label23 
-	rax <- r8 
-	return 
-)(:loop5
-	1 0
-	r10 <- rdi 
-	r8 <- 0 
-	:call_label24 
-	r10 <- r10 
-	r10 -= 4 
-	r8 <- r8 
-	r8 += 1 
-	r9 <- r10 = 0 
-	cjump r9 = 1 :call_label25 :call_label24 
-	:call_label25 
-	rax <- r8 
-	return 
-)(:loop6
-	1 0
-	r10 <- rdi 
-	r8 <- 0 
-	:call_label26 
-	r10 <- r10 
-	r10 <<= 1 
-	r8 <- r8 
-	r8 += 1 
-	r9 <- r10 = 0 
-	cjump r9 = 1 :call_label27 :call_label26 
-	:call_label27 
-	rax <- r8 
-	return 
-)(:loop7
-	1 0
-	r10 <- rdi 
-	r8 <- 0 
-	:call_label28 
-	r10 <- 1 < r10 
-	r8 <- r8 
-	r8 += 1 
-	r9 <- r10 = 0 
-	cjump r9 = 1 :call_label29 :call_label28 
-	:call_label29 
-	rax <- r8 
-	return 
-)(:loop8
-	1 0
-	r10 <- rdi 
-	r8 <- 0 
-	:call_label30 
-	r10 <- r10 
-	r10 += 3 
-	r8 <- r8 
-	r8 += 1 
-	r9 <- r10 = 0 
-	cjump r9 = 1 :call_label31 :call_label30 
-	:call_label31 
-	rax <- r8 
-	return 
-)(:encode
-	1 0
-	r8 <- rdi 
-	r9 <- r8 
-	r9 &= 1 
-	r9 <- r9 = 1 
-	cjump r9 = 1 :call_label33 :call_label32 
-	:call_label32 
-	r8 <- r8 
-	r8 += 1 
-	:call_label33 
-	rax <- r8 
 	return 
 )
 )
