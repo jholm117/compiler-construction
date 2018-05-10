@@ -54,6 +54,8 @@ namespace L3{
         vector<L3_Item*> args; 
     };
 
+    struct Label_I : Instruction {};
+
     struct Assign_I : Instruction {};
 
     struct Assign_Op_I : Instruction {};
@@ -66,7 +68,9 @@ namespace L3{
 
     struct Conditional_Branch_I : Instruction {};
     
-    struct Call_I : Instruction {};
+    struct Call_I : Instruction {
+        string toString() override;
+    };
 
     struct Assign_Call_I : Instruction {};
 
