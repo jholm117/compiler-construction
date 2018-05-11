@@ -4,7 +4,7 @@
 
 namespace L3 {
 
-    void generateCode(Program p);
+    void generateCode(Program & p);
     
 } // L3
 
