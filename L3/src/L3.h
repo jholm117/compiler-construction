@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 
+#include <utils.h>
 #include <iostream>
 
 using namespace std;
@@ -26,6 +27,8 @@ namespace L3{
     struct Variable : StringItem {};
 
     struct Label : StringItem {};
+
+    struct Runtime_Function : StringItem {};
 
     enum L3_OperatorType {
         PLUS,
@@ -72,7 +75,9 @@ namespace L3{
         string toString() override;
     };
 
-    struct Assign_Call_I : Instruction {};
+    struct Assign_Call_I : Instruction {
+        string toString() override;
+    };
 
     struct Return_I : Instruction {
         string toString() override;
@@ -84,11 +89,13 @@ namespace L3{
 
     struct Function {
         Label* name;
+        std::string toString();
         vector<Variable*> arguments;
         vector<Instruction*> instructions;
     };
 
     struct Program {
         vector<Function*> functions;
+        string longestLabel;
     };
 }

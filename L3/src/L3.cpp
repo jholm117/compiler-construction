@@ -1,6 +1,6 @@
 #include <L3.h>
 
-
+using namespace std;
 
 namespace L3 {
 
@@ -35,34 +35,4 @@ namespace L3 {
         if( op == ">=") return GREATER_THAN_EQ;
         else return OP_TYPE_ERROR;
     }
-
-    string L3_Item::toString(){
-        return "ehh";
-    }
-
-    string Instruction::toString(){
-        return "instruction";
-    }
-    
-    string Number::toString(){
-        return std::to_string(this->value);
-    }
-
-    string StringItem::toString(){
-        return this->name;
-    }
-
-    string Operator::toString(){
-        return "operatorRRR";
-    }
-
-    string Return_I::toString(){
-        return "return";
-    }
-
-    string Return_Value_I::toString(){
-        return "return " + this->args.front()->toString();
-    }
-
-    
 } 

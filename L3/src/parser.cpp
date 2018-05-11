@@ -286,9 +286,7 @@ namespace L3{
         >{};
 
     struct functionNameRule:
-        pegtl::seq<
-            label
-        > {};
+        label{};
         
     struct functionRule:
         pegtl::seq<
@@ -352,9 +350,12 @@ namespace L3{
     template<> struct action < label > {
         template< typename Input >
         static void apply( const Input & in, L3::Program & p){
-            L3::Label* n = new L3::Label();
+            auto n = new L3::Label();
             n->name = in.string();
             parsedItems.push_back(n);
+            if(in.string().length() > p.longestLabel.length()){
+                p.longestLabel = in.string();
+            }
         }
     };
 
@@ -367,19 +368,19 @@ namespace L3{
         }
     };
 
+    template<> struct action < runtime_function > {
+        template< typename Input >
+        static void apply( const Input & in, L3::Program & p){
+            auto r = new L3::Runtime_Function();
+            r->name = in.string();
+            parsedItems.push_back(r);
+        }
+    };
+
     template<> struct action < op > {
         template< typename Input >
         static void apply( const Input & in, L3::Program & p){
             cacheOperator(in.string());
-        }
-    };
-
-    template<> struct action < runtime_function > {
-        template< typename Input >
-        static void apply( const Input & in, L3::Program & p){
-            L3::Variable* n = new L3::Variable();
-            n->name = in.string();
-            parsedItems.push_back(n);
         }
     };
 
@@ -474,10 +475,20 @@ namespace L3{
     template<> struct action < functionNameRule > {
         template< typename Input >
         static void apply( const Input & in, L3::Program & p){
-            auto l = pop_item();
+            auto l = new Label();
+            l->name = in.string();
             Function* f = new Function();
             f->name = (Label*)l;
             p.functions.push_back(f);
+        }
+    };
+
+    template<> struct action < params > {
+        template< typename Input >
+        static void apply( const Input & in, L3::Program & p){
+            for (auto item : parsedItems) 
+                p.functions.back()->arguments.push_back((Variable*) item);
+            parsedItems.clear();
         }
     };
 
