@@ -1,0 +1,21 @@
+define :main () {
+    :hello
+    br :hello
+    br :kite
+    br v1 :goodbye :hello
+    :goodbye
+    return
+}
+
+define :first_function () {
+    :hello
+    :goodbye
+    call :myguy ()
+    return
+}
+
+define :whaddup () {
+    :hello
+    :kite
+    return
+}
