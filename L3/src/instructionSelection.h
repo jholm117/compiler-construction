@@ -5,12 +5,16 @@ namespace L3 {
   struct Node {
     L3_Item* value;
     vector<Node*> children;
-    Node() {};
+    bool isRoot;
+    Node() {
+      isRoot = false;
+    };
     Node(L3_Item* v) {
-      value = v
+      value = v;
+      isRoot = false;
     }
     bool equals(Node* n) {
-      return this.value->toString() == n->value->toString();
+      return this->value->equals( n->value );
     }
-  }
+  };
 }

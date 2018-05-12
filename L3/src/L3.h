@@ -52,6 +52,10 @@ namespace L3{
 
     struct Operator : L3_Item {
         L3_OperatorType op;
+        Operator () {}
+        Operator( L3_OperatorType o ) {
+            op = o;
+        }
         string toString() override;
     };
 
@@ -75,7 +79,7 @@ namespace L3{
     struct Conditional_Branch_I : Instruction {};
     
     struct Call_I : Instruction {
-        string toString() override;
+        // string toString() override;
     };
 
     struct Assign_Call_I : Instruction {};

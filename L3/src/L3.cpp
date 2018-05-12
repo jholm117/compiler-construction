@@ -35,9 +35,6 @@ namespace L3 {
         if( op == "=") return EQ;
         if( op == ">") return GREATER_THAN;
         if( op == ">=") return GREATER_THAN_EQ;
-        if( op == "load") return LOAD;
-        if( op == "store") return STORE;
-        if( op == "<-") return ARROW;
         else return OP_TYPE_ERROR;
     }
 
