@@ -17,6 +17,8 @@ namespace L3 {
     //         case EQ: return "";
     //         case GREATER_THAN: return "";
     //         case GREATER_THAN_EQ: return "";
+    // case LOAD
+    // case STORE
     //         default: return "Invalid Operator Type";
     //     }
     // }
@@ -33,6 +35,9 @@ namespace L3 {
         if( op == "=") return EQ;
         if( op == ">") return GREATER_THAN;
         if( op == ">=") return GREATER_THAN_EQ;
+        if( op == "load") return LOAD;
+        if( op == "store") return STORE;
+        if( op == "<-") return ARROW;
         else return OP_TYPE_ERROR;
     }
 

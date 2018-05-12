@@ -95,6 +95,12 @@ namespace L3{
     
     struct arrow:
         TAOCPP_PEGTL_STRING("<-") {};
+    
+    struct load:
+        TAOCPP_PEGTL_STRING("load") {};
+    
+    struct store:
+        TAOCPP_PEGTL_STRING("store") {};
 
     struct runtime_function:
         pegtl::sor<
@@ -171,14 +177,14 @@ namespace L3{
             seps,
             arrow,
             seps,
-            TAOCPP_PEGTL_STRING("load"),
+            load,
             seps,
             variable
         >{};
     
     struct store_i:
         pegtl::seq<
-            TAOCPP_PEGTL_STRING("store"),
+            store,
             seps,
             variable,
             seps,
@@ -376,6 +382,29 @@ namespace L3{
             cacheOperator(in.string());
         }
     };
+
+    template<> struct action < load > {
+        template< typename Input >
+        static void apply( const Input & in, L3::Program & p){
+            cacheOperator(in.string());
+        }
+    };
+
+    template<> struct action < store > {
+        template< typename Input >
+        static void apply( const Input & in, L3::Program & p){
+            cacheOperator(in.string());
+        }
+    };
+
+    template<> struct action < arrow > {
+        template< typename Input >
+        static void apply( const Input & in, L3::Program & p){
+            cacheOperator(in.string());
+        }
+    };
+
+    
 
     /*
         Instruction Actions
