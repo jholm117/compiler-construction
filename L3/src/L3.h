@@ -57,7 +57,9 @@ namespace L3{
         vector<L3_Item*> args; 
     };
 
-    struct Label_I : Instruction {};
+    struct Label_I : Instruction {
+        string toString() override;
+    };
 
     struct Assign_I : Instruction {};
 
@@ -67,9 +69,13 @@ namespace L3{
 
     struct Store_I : Instruction {};
 
-    struct Branch_I : Instruction {};
+    struct Branch_I : Instruction {
+        string toString() override;
+    };
 
-    struct Conditional_Branch_I : Instruction {};
+    struct Conditional_Branch_I : Instruction {
+        string toString() override;
+    };
     
     struct Call_I : Instruction {
         string toString() override;
@@ -89,9 +95,10 @@ namespace L3{
 
     struct Function {
         Label* name;
-        std::string toString();
         vector<Variable*> arguments;
         vector<Instruction*> instructions;
+        vector<Label*> labels;
+        std::string toString();
     };
 
     struct Program {

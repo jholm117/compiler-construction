@@ -124,12 +124,15 @@ namespace L3{
             label,
             variable
         >{};
+
+    struct function_label:
+        label{};
     
     struct callee:
         pegtl::sor<
             runtime_function,
             variable,
-            label
+            function_label
         >{};
     
     struct return_i:
@@ -221,7 +224,7 @@ namespace L3{
         >{};
     
     struct label_i:
-        pegtl::seq<label> {};
+        pegtl::seq< label > {};
 
     struct args:
         pegtl::sor<
@@ -331,6 +334,13 @@ namespace L3{
         p.functions.back()->instructions.push_back(i);
     }
 
+    L3::Label* parseLabel(std::string str){
+        auto l = new L3::Label();
+        l->name = str;
+        parsedItems.push_back(l);
+        return l;
+    }
+
     template< typename Rule >
     struct action : pegtl::nothing< Rule > {};
 
@@ -350,12 +360,18 @@ namespace L3{
     template<> struct action < label > {
         template< typename Input >
         static void apply( const Input & in, L3::Program & p){
-            auto n = new L3::Label();
-            n->name = in.string();
-            parsedItems.push_back(n);
-            if(in.string().length() > p.longestLabel.length()){
+            auto l = parseLabel(in.string());
+            if(l->name.length() > p.longestLabel.length()){
                 p.longestLabel = in.string();
             }
+            p.functions.back()->labels.push_back(l);
+        }
+    };
+
+    template<> struct action < function_label > {
+        template< typename Input >
+        static void apply( const Input & in, L3::Program & p){
+            parseLabel(in.string());
         }
     };
 
@@ -451,6 +467,13 @@ namespace L3{
         }
     };
 
+    template<> struct action < branch_i > {
+        template< typename Input >
+        static void apply( const Input & in, L3::Program & p){
+            instructionAction(new Branch_I(), p);
+        }
+    };
+
     template<> struct action < conditional_branch_i > {
         template< typename Input >
         static void apply( const Input & in, L3::Program & p){
@@ -471,6 +494,10 @@ namespace L3{
             instructionAction(new Label_I(), p);
         }
     };
+
+    /*
+    *   Function-Level Actions
+    */
 
     template<> struct action < functionNameRule > {
         template< typename Input >

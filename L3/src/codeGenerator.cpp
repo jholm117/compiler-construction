@@ -5,6 +5,16 @@ using namespace std;
 namespace L3{
     const int ARGUMENT_REGISTERS = 6;
 
+    void transformLabels(Program & p){
+        for (auto f : p.functions){
+            string LLF = p.longestLabel.substr(1) + "_" + f->name->toString().substr(1) + "_";
+
+            for (auto label : f->labels){
+                label->name.insert(1, LLF);
+            }
+        }
+    }
+
     void generateCode(Program & p){
         cout << "(:main\n";
         for (auto f : p.functions){
@@ -31,7 +41,22 @@ namespace L3{
  
     string Instruction::toString(){
         return i_line("instruction");
-    }   
+    }
+
+    string Branch_I::toString(){
+        return i_line("goto " + this->args.front()->toString());
+    }
+
+    string Conditional_Branch_I::toString(){
+        string var = this->args.front()->toString();
+        string true_label = this->args.back()->toString();
+        string false_label = this->args[1]->toString();
+        return i_line("cjump 0 = " + var + " " + true_label + " " + false_label);
+    }
+
+    string Label_I::toString(){
+        return i_line(this->args.front()->toString());
+    }
 
     string Return_I::toString(){
         return i_line("return");
