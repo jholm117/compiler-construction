@@ -79,7 +79,7 @@ namespace L3{
     struct Conditional_Branch_I : Instruction {};
     
     struct Call_I : Instruction {
-        // string toString() override;
+        string toString() override;
     };
 
     struct Assign_Call_I : Instruction {};
