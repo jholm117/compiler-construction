@@ -17,6 +17,8 @@ namespace L3 {
     //         case EQ: return "";
     //         case GREATER_THAN: return "";
     //         case GREATER_THAN_EQ: return "";
+    // case LOAD
+    // case STORE
     //         default: return "Invalid Operator Type";
     //     }
     // }

@@ -12,6 +12,9 @@ namespace L3{
 
     struct L3_Item {
         virtual string toString();
+        bool equals(L3_Item* rhs){
+            return this->toString() == rhs->toString(); 
+        }
     };
 
     struct Number : L3_Item {
@@ -42,6 +45,9 @@ namespace L3{
         EQ,
         GREATER_THAN,
         GREATER_THAN_EQ,
+        LOAD,
+        STORE,
+        ARROW,
         OP_TYPE_ERROR
     };
 
@@ -49,12 +55,16 @@ namespace L3{
 
     struct Operator : L3_Item {
         L3_OperatorType op;
+        Operator () {}
+        Operator( L3_OperatorType o ) {
+            op = o;
+        }
         string toString() override;
     };
 
     struct Instruction {
         virtual string toString();
-        vector<L3_Item*> args; 
+        vector<L3_Item*> args;
     };
 
     struct Label_I : Instruction {
