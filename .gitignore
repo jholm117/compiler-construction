@@ -37,3 +37,7 @@ ehthumbs.db
 Thumbs.db
 
 *.vscode
+*.tmp
+prog.*
+a.out
+L*/bin

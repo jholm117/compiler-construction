@@ -14,6 +14,7 @@ using namespace pegtl;
 namespace L3{
 
     std::vector<L3::L3_Item*> parsedItems;
+    int counter = 0;
 
     L3_Item* pop_item(){
         auto ret = parsedItems.back();
@@ -66,7 +67,15 @@ namespace L3{
 
     struct variable:
         pegtl::seq<
-            pegtl::not_at< keyword >,
+            pegtl::not_at<
+                pegtl::seq<
+                    keyword,
+                    pegtl::sor< 
+                        pegtl::ascii::space, 
+                        comment 
+                    >
+                >
+            >,
             var
         > {};
 
@@ -101,8 +110,8 @@ namespace L3{
     
     struct cmp:
         pegtl::sor<
-            TAOCPP_PEGTL_STRING("<"),
             TAOCPP_PEGTL_STRING("<="),
+            TAOCPP_PEGTL_STRING("<"),
             TAOCPP_PEGTL_STRING("="),
             TAOCPP_PEGTL_STRING(">="),
             TAOCPP_PEGTL_STRING(">")
@@ -323,8 +332,7 @@ namespace L3{
         > {};
 
     void cacheOperator(std::string str){
-        L3::Operator* n = new L3::Operator();
-        n->op = stringToOperatorType(str);
+        L3::Operator* n = new L3::Operator( stringToOperatorType(str) );
         parsedItems.push_back(n);
     }
 
@@ -381,6 +389,7 @@ namespace L3{
             L3::Variable* n = new L3::Variable();
             n->name = in.string();
             parsedItems.push_back(n);
+
         }
     };
 
@@ -434,8 +443,10 @@ namespace L3{
     
     template<> struct action < assign_call_i > {
         template< typename Input >
-        static void apply( const Input & in, L3::Program & p){
-            instructionAction(new Assign_Call_I(), p);
+        static void apply( const Input & in, L3::Program & p){            
+            auto i = new Assign_Call_I();
+            i->count = counter++;
+            instructionAction(i, p);
         }
     };
 
@@ -484,7 +495,9 @@ namespace L3{
     template<> struct action < call_i > {
         template< typename Input >
         static void apply( const Input & in, L3::Program & p){
-            instructionAction(new Call_I(), p);
+            auto i = new Call_I();
+            i->count = counter++;
+            instructionAction(i, p);
         }
     };
 
@@ -523,6 +536,7 @@ namespace L3{
         pegtl::analyze< L3::grammar >();
         file_input< > fileInput(filename);
         L3::Program p;
+        p.longestLabel = "";
         parse< L3::grammar, L3::action >(fileInput, p);
         return p;
     }

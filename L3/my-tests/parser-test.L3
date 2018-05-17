@@ -1,0 +1,4 @@
+define :main (){
+	hello <- asd > dsa
+	keepExecuting <- 0 <= i
+}

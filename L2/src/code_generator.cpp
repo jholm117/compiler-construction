@@ -42,9 +42,13 @@ namespace L2{
       do {
         colored.clear();
         needToSpill = false;
+        // cout << "gen code" << f->name << endl;
         auto liveness = L2::computeLivenessAnalysis(p, f);
+        // cout << "liveness" << endl;
         auto ig = L2::computeInterferenceGraph(f, liveness);
+        // cout << "intereference" << endl;
         auto cg = L2::computeColoredGraph(ig);
+        // cout << "colored graph" << endl;
         int newVarsToSpill = 0;
 
         int spillSuffix = 0;        

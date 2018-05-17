@@ -1,11 +1,12 @@
 #include <L3.h>
 #include <instructionSelection.h>
+#include <algorithm>
 
 using namespace std;
 
 namespace L3 {
   
-  Node* createInstructionNode(Instruction* i) {
+  Node* createInstructionNode(Contextual_I* i) {
     vector<Node*> itemNodes;  
     for( auto arg : i->args ) {
       itemNodes.push_back(new Node(arg));
@@ -20,9 +21,7 @@ namespace L3 {
 
     if( dynamic_cast<Assign_I*>(i) ) {
       // var var
-      auto assignNode = new Node(new Operator(ARROW));
-      itemNodes[0]->children.push_back(assignNode);
-      assignNode->children.push_back(itemNodes[1]);
+      itemNodes[0]->children.push_back(itemNodes[1]);
       itemNodes[0]->isRoot = true;
       return itemNodes[0];
     }
@@ -39,8 +38,8 @@ namespace L3 {
       auto loadNode = new Node(new Operator(LOAD));
       itemNodes[0]->children.push_back(loadNode);
       loadNode->children.push_back(itemNodes[1]);
-      itemNodes[1]->isRoot = true;
-      return itemNodes[1];
+      itemNodes[0]->isRoot = true;
+      return itemNodes[0];
     }
     else if(dynamic_cast<Store_I*>(i)) {
       // var var
@@ -53,11 +52,11 @@ namespace L3 {
     return new Node();
   }
 
-  vector<Node*> createNodesFromContext(vector<Instruction*>& instructions) {
+  vector<Node*> createNodesFromContext(vector<Contextual_I*> & instructions) {
     vector<Node*> nodeList;
-    for ( auto i : instructions ) {
-      nodeList.push_back(createInstructionNode(i));
-    }
+    nodeList.resize(instructions.size());
+    std::transform(instructions.begin(), instructions.end(), nodeList.begin(), createInstructionNode);
+
     return nodeList;
   }
 
@@ -69,9 +68,8 @@ namespace L3 {
     }
   
     for ( auto child : n->children ) {
-      for ( auto leaf : getNodeLeaves(child) ) {
-        leaves.push_back(leaf);
-      }
+      auto childLeaves = getNodeLeaves(child);
+      leaves.insert(leaves.end(), childLeaves.begin(), childLeaves.end());
     }
     return leaves;
   }
@@ -97,4 +95,16 @@ namespace L3 {
     }
   }
 
+  // TiledTree tileTree(Node* n){
+
+  // }
+
+  std::string transformContext(vector<Contextual_I*> & context){
+    auto nodes = createNodesFromContext(context);
+    mergeNodesInContext(nodes);
+    // filter out non roots
+    // map to tiled trees
+    // foreach generate code
+
+  }
 }

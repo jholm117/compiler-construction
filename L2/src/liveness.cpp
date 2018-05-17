@@ -172,23 +172,27 @@ namespace L2{
     }
 
     //make reference
-    vector<OUR_SET> getSuccessors(int i_index, vector<Instruction*>& instructions, vector<OUR_SET>& in_sets){
+    vector<OUR_SET> getSuccessors(int i_index, vector<Instruction*> & instructions, vector<OUR_SET> & in_sets){
         Instruction* i_ptr = instructions[i_index];
         int successor, first_succ, second_succ;
         switch(i_ptr->type){
             case GOTO:
                 successor = find_label_i(i_ptr->args.back(), instructions);
+                // cout << successor <<endl;
                 return vector<OUR_SET> { in_sets[successor] }; 
                 
             case CJUMP:
                 first_succ = find_label_i(i_ptr->args[3], instructions);
                 second_succ = find_label_i(i_ptr->args[4], instructions);
+                // cout << first_succ << " " << second_succ << endl;
                 return vector<OUR_SET> { in_sets[first_succ], in_sets[second_succ] };
 
             case RETURN:
+                // cout << endl;
                 return vector<OUR_SET>();
 
             default:
+                // cout << i_index+1 << endl;
                 return vector<OUR_SET> { in_sets[i_index+1] }; 
         } 
     }
@@ -221,7 +225,6 @@ namespace L2{
     // }
 
     OUR_SET ComputeOutSet(int index, vector<Instruction*>& instructions, vector<OUR_SET>& in_sets){
-
         vector<OUR_SET> successor_in_sets = getSuccessors(index, instructions, in_sets);
         OUR_SET out_set;
         for(OUR_SET s : successor_in_sets){
@@ -230,11 +233,22 @@ namespace L2{
         return out_set;
     }
 
+    bool areDifferent(OUR_SET & set1, OUR_SET & set2){
+        if(set1.size() != set2.size()) return true;
+        OUR_SET diff;
+        std::set_symmetric_difference(set1.begin(), set1.end(), set2.begin(), set2.end(), std::inserter(diff, diff.begin()), L2_Compare());
+        return !diff.empty();
+    }
+
     DataFlowResult* computeLivenessAnalysis(Program p, Function* f) {
         vector<OUR_SET> gen_sets;
         vector<OUR_SET> kill_sets;
 
         for (Instruction* i : f->instructions) {
+            // cout << i->toString(f->locals) << endl;
+            // cout << "GEN:" << SetToString(ComputeGen(i));
+            // cout << "KILL:" << SetToString(ComputeKill(i)) << endl << endl;
+            
             gen_sets.push_back(ComputeGen(i));
             kill_sets.push_back(ComputeKill(i));
         }
@@ -247,16 +261,17 @@ namespace L2{
         do{
             in_or_out_changed = false;
 
-            // for(int i = 0; i < f->instructions.size(); ++i){
-            for(int i = f->instructions.size()-1; i >= 0 ; --i){
+            for(int i = 0; i < f->instructions.size(); ++i){
+            // for(int i = f->instructions.size()-1; i >= 0 ; --i){
                
                 OUR_SET in_set = ComputeInSet(gen_sets[i], kill_sets[i], out_sets[i]);
                 OUR_SET out_set = ComputeOutSet(i, f->instructions, in_sets);
 
-                in_or_out_changed = in_or_out_changed || in_set != in_sets[i] || out_set != out_sets[i];
+                in_or_out_changed = in_or_out_changed || areDifferent(in_set, in_sets[i]) || areDifferent(out_set, out_sets[i]);
                 in_sets[i] = in_set;
                 out_sets[i] = out_set;
             }
+                // return nullptr;
             // cout << endl;
         } while(in_or_out_changed);
         

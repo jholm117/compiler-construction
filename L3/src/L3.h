@@ -55,10 +55,7 @@ namespace L3{
 
     struct Operator : L3_Item {
         L3_OperatorType op;
-        Operator () {}
-        Operator( L3_OperatorType o ) {
-            op = o;
-        }
+        Operator( L3_OperatorType o );
         string toString() override;
     };
 
@@ -67,39 +64,55 @@ namespace L3{
         vector<L3_Item*> args;
     };
 
-    struct Label_I : Instruction {
+    struct Contextual_I  : Instruction {};
+
+    struct CallingC_I : Instruction {};
+
+    struct Assign_I : Contextual_I {
         string toString() override;
     };
 
-    struct Assign_I : Instruction {};
-
-    struct Assign_Op_I : Instruction {};
-
-    struct Load_I : Instruction {};
-
-    struct Store_I : Instruction {};
-
-    struct Branch_I : Instruction {
+    struct Assign_Op_I : Contextual_I {
         string toString() override;
     };
 
-    struct Conditional_Branch_I : Instruction {
+    struct Load_I : Contextual_I {
         string toString() override;
+    };
+
+    struct Store_I : Contextual_I {
+        string toString() override;
+    };
+
+    struct Label_I : CallingC_I {
+        string toString() override;
+    };
+
+    struct Branch_I : CallingC_I {
+        string toString() override;
+    };
+
+    struct Conditional_Branch_I : CallingC_I {
+        string toString() override;
+    };
+
+    struct Call : CallingC_I {
+        int count;
     };
     
-    struct Call_I : Instruction {
+    struct Call_I : Call {
         string toString() override;
     };
 
-    struct Assign_Call_I : Instruction {
+    struct Assign_Call_I : Call {
         string toString() override;
     };
 
-    struct Return_I : Instruction {
+    struct Return_I : CallingC_I {
         string toString() override;
     };
 
-    struct Return_Value_I : Return_I {
+    struct Return_Value_I : CallingC_I {
         string toString() override;
     };
 

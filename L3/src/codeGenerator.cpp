@@ -1,26 +1,40 @@
 #include <codeGenerator.h>
+#include <fstream>
 
 using namespace std;
 
 namespace L3{
     const int ARGUMENT_REGISTERS = 6;
 
-    void transformLabels(Program & p){
-        for (auto f : p.functions){
-            string LLF = p.longestLabel.substr(1) + "_" + f->name->toString().substr(1) + "_";
+    bool isFunctionName(Label* label, vector<Function*> & functions){
+        for (auto f : functions){
+            if(label->equals(f->name)) return true;
+        }
+        return false;
+    }
 
-            for (auto label : f->labels){
-                label->name.insert(1, LLF);
+    void transformLabels(Program & p){
+        if(p.longestLabel.size()>0){
+            for (auto f : p.functions){
+                string LLF = p.longestLabel.substr(1) + "_" + f->name->toString().substr(1) + "_";
+
+                for (auto label : f->labels){
+                    if(!isFunctionName((Label*)label, p.functions)){
+                        label->name.insert(1, LLF);
+                    }
+                }
             }
         }
     }
 
     void generateCode(Program & p){
-        cout << "(:main\n";
+        std::ofstream outputFile;
+        outputFile.open("prog.L2");
+        outputFile << "(:main\n";
         for (auto f : p.functions){
-            cout << f->toString();
+            outputFile << f->toString();
         }
-        cout << ")" << endl;
+        outputFile << ")" << endl;
     }
 
      string L3_Item::toString(){
@@ -36,11 +50,96 @@ namespace L3{
     }
 
     string Operator::toString(){
-        return "operatorRRR";
+        switch(this->op){
+            case PLUS: return "+=";
+            case MINUS: return "-=";
+            case STAR: return "*=";
+            case AND: return "&=";
+            case SHIFT_LEFT: return "<<=";
+            case SHIFT_RIGHT: return ">>=";
+            case LESS_THAN: return "<";
+            case LESS_THAN_EQ: return "<=";
+            case EQ: return "=";
+            default: return "error";
+        }
     }
  
     string Instruction::toString(){
         return i_line("instruction");
+    }
+
+    string Assign_I::toString(){
+        auto dst = this->args.front()->toString();
+        auto src = this->args.back()->toString();
+        return i_line(dst + " <- " + src);
+    }
+
+    string Load_I::toString(){
+        auto dst = this->args.front()->toString();
+        auto addr = this->args.back()->toString();
+        return i_line(dst + " <- mem " + addr + " 0");
+    }
+
+    string Store_I::toString(){
+        auto addr = this->args.front()->toString();
+        auto src = this->args.back()->toString();
+        return i_line("mem " + addr + " 0 <- " + src);
+    }
+
+    string normalAssignOpI(string dst, string src, Operator* op, string src2){
+        string s;
+        s += i_line( dst + " <- " + src );
+        s += i_line( dst + " " + op->toString() + " " + src2 );
+        return s;
+    }
+
+    string Assign_Op_I::toString(){
+        auto op = (Operator*)this->args[2];
+        auto dst = this->args.front()->toString();
+        auto src = this->args[1]->toString();
+        auto src2 = this->args.back()->toString();
+        switch(op->op){
+            case GREATER_THAN:
+                return i_line( dst + " <- " + src2 + " < " + src );
+            case GREATER_THAN_EQ:
+                return i_line( dst + " <- " + src2 + " <= " + src );
+            case LESS_THAN:
+            case LESS_THAN_EQ:
+            case EQ:
+                return i_line( dst + " <- " + src + " " + op->toString() + " " + src2 );
+                // bug here
+            // case SHIFT_LEFT:
+            // case SHIFT_RIGHT:
+            //     if(dst == src){
+            //         return i_line(dst + " " + op->toString() + " " + src2);
+            //     } else if(dst == src2){
+            //         string s;
+            //         s+= i_line(dst + " *= -1");
+            //         s+= i_line(dst + " += " + src);
+            //         return s;
+            //     } else {
+            //         return normalAssignOpI(dst, src, op, src2);
+            //     }
+            case MINUS:
+                if(dst == src){
+                    return i_line(dst + " " + op->toString() + " " + src2);
+                } else if(dst == src2){
+                    string s;
+                    s+= i_line(dst + " *= -1");
+                    s+= i_line(dst + " += " + src);
+                    return s;
+                } else {
+                    return normalAssignOpI(dst, src, op, src2);
+                }
+            default:
+                if(dst == src){
+                    return i_line(dst + " " + op->toString() + " " + src2);
+                } else if(dst == src2) {
+                    return i_line(dst + " " + op->toString() + " " + src);
+                } else{
+                    return normalAssignOpI(dst, src, op, src2);
+                }
+        }
     }
 
     string Branch_I::toString(){
@@ -88,15 +187,19 @@ namespace L3{
                 s += i_line( params[i]->toString() + " <- " + argumentRegisters[i]);
             } else {
                 auto M = 8 * (params.size() - i - 1);
-                s += i_line( "stack-arg " + to_string(M) );
+                s += i_line( params[i]->toString() + "<- stack-arg " + to_string(M) );
             }
         }
         return s;
     }
 
-    string callerCC(vector<L3_Item*>& callArgs){
-        auto functionName = callArgs.front()->toString();
-        auto returnLabel = functionName + "_ret";
+    string callerCC(vector<L3_Item*>& callArgs, int count){
+        auto addr = callArgs.front();
+        auto functionName = addr->toString();
+        auto returnLabel = functionName + "_ret_" + to_string(count);
+        if(dynamic_cast<Variable*>(addr)){
+            returnLabel.insert(0, ":");
+        }
         auto isCallRuntime = dynamic_cast<Runtime_Function*>(callArgs.front());
         auto functionArguments = callArgs;
         functionArguments.erase(functionArguments.begin());
@@ -109,23 +212,35 @@ namespace L3{
     }
 
     string Call_I::toString(){
-        return callerCC(this->args);
+        return callerCC(this->args, this->count);
     }
 
     string Assign_Call_I::toString(){
         auto callArgs = this->args;
         callArgs.erase(callArgs.begin());
-        auto s = callerCC(callArgs);
+        auto s = callerCC(callArgs, this->count);
         s += i_line( this->args.front()->toString() + " <- rax");
         return s;
     }
 
     string Function::toString(){
         auto s = f_line("(" + this->name->toString());
+        // vector<Contextual_I*> context;
+
         s += i_line(to_string(this->arguments.size()) + " 0");
         s += calleeCC(this->arguments);
         for (auto i : this->instructions){
-            s += i->toString();
+            // cout << i->toString();
+            if (dynamic_cast<Contextual_I*>(i)){
+                // context.push_back((Contextual_I*)i);
+                
+                s += i->toString();
+            }
+            if (dynamic_cast<CallingC_I*>(i)){
+                // s += transformContext(context);
+                // context.clear();
+                s += i->toString();
+            }            
         }
         s += f_line(")");
         return s;

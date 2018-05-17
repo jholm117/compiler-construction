@@ -6,6 +6,8 @@
 #include <my_utils.h>
 #include <iostream>
 
+using namespace std;
+
 namespace L2 {
     struct L2_Item {
         itemType item_type;
@@ -15,9 +17,16 @@ namespace L2 {
         }
     };
 
+    // bool OUR_SET::operator== (OUR_SET lhs, L2_Item* rhs) {
+    //     cout << "uh suhh" <<endl;
+    //     return lhs->toString() == rhs->toString();
+    // }
 
     struct L2_Compare {
         bool operator()( L2_Item* lhs, L2_Item* rhs) {
+            // cout << "L2 COMPARE" << endl;
+            // cout << lhs ->toString() << "  " << rhs->toString() << endl;
+            // cout << "result:   "  << to_string(lhs->toString() < rhs->toString()) << endl;
             return lhs->toString() < rhs->toString();
         }
     };

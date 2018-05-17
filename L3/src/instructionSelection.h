@@ -17,4 +17,6 @@ namespace L3 {
       return this->value->equals( n->value );
     }
   };
+
+  std::string transformContext(vector<Contextual_I*> & v);
 }
