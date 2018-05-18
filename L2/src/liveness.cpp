@@ -23,6 +23,10 @@ namespace L2{
         return r;
     }
 
+     Register* mapToRegister(regType r){
+        return new Register(r);
+    }
+
     std::string DataFlowResult::toString(){ 
         // std::string r = "gen set\n";
         // for(auto s: genSets) r += SetToString(s);
@@ -41,10 +45,9 @@ namespace L2{
         return r;
     }
 
-
-    OUR_SET ComputeSet(vector<L2_Item*> items) {
+    OUR_SET ComputeSet(vector<L2_Item*> & items) {
         OUR_SET v; 
-        for (L2_Item* a : items){
+        for (auto a : items){
             //doesnt work :(
             switch(a->item_type) {
                 case VAREXP:
@@ -56,17 +59,17 @@ namespace L2{
                     break;
             }
         }
-        v.erase(new Register(rsp));
+        v.erase(mapToRegister(rsp));
+        return v;
+    }   
+
+    vector<L2_Item*> mapToRegisters(vector<regType> * regs){
+        vector<L2_Item*> v;
+        v.resize(regs->size());
+        std::transform(regs->begin(), regs->end(), v.begin(), mapToRegister);
         return v;
     }
 
-    vector<L2_Item*> mapToRegisters(vector<regType> regs){
-        vector<L2_Item*> v;
-        for (regType r : regs){
-            v.push_back(new Register(r));
-        }
-        return v;
-    }
     // start to end inclusive
     vector<L2_Item*> Subvector(vector<L2_Item*>& vec, int start, int end){
         vector<L2_Item*>::iterator first = vec.begin() + start;
@@ -80,18 +83,18 @@ namespace L2{
         int n = ((L2::Number*)numArgs)->num;
         // just added i<6
         for(int i = 0; i < n && i < 6; ++i){
-            v.push_back(new Register(arguments[i]));
+            v.push_back(mapToRegister(arguments[i]));
         }
         v.push_back(address);
         return v;
     }
 
-    vector<L2_Item*> KillCallerSaved(){
-        return mapToRegisters(callerSaved);
+    vector<L2_Item*> KillCallerSaved(){        
+        return  mapToRegisters(&callerSaved);
     }
 
     vector<L2_Item*> ReturnGenRegisters(){
-        vector<L2_Item*> v = mapToRegisters(calleeSaved);
+        vector<L2_Item*> v = mapToRegisters(&calleeSaved);
         v.push_back(new Register(rax));
         return v;
     }
@@ -101,7 +104,8 @@ namespace L2{
         if(dynamic_cast<Mem*>(dest)){
             return ComputeSet(args);
         } else {
-            return ComputeSet(Subvector(args,1, args.size()));
+            auto v = Subvector(args,1, args.size());
+            return ComputeSet(v);
         }
     }
 
@@ -110,15 +114,18 @@ namespace L2{
         if(dynamic_cast<Mem*>(dest)){
             return OUR_SET();
         } else {
-            return ComputeSet(Subvector(args,0, 1));
+            auto v = Subvector(args,0, 1);
+            return ComputeSet(v);
         }
     }
 
     OUR_SET ComputeGen(Instruction* i) {
+        vector<L2_Item*> v1, v2, v3;
         switch(i->type){
             case CALL_LOCAL:
             case CALL_RUNTIME:
-                return ComputeSet(GenArguments(i->args.front(), i->args.back()));
+                v1 = GenArguments(i->args.front(), i->args.back());
+                return ComputeSet(v1);
             case CJUMP:
             case INC_DEC:
             case SOP:
@@ -126,17 +133,20 @@ namespace L2{
                 return ComputeSet(i->args);
             case LEA:
             case ASSIGN_CMP:
-                return ComputeSet(Subvector(i->args, 1, i->args.size()));
+                v2 = Subvector(i->args, 1, i->args.size());
+                return ComputeSet(v2);
             case ASSIGN: 
                 return ComputeAssignGenSet(i->args);
             case RETURN:
-                return ComputeSet(ReturnGenRegisters());
+                v3 = ReturnGenRegisters();
+                return ComputeSet(v3);
             default:
                 return OUR_SET();
         }
     }
 
     OUR_SET ComputeKill(Instruction* i) {
+        vector<L2_Item*> v1, v2;
         switch(i->type){
             case ASSIGN:
             case AOP:
@@ -145,10 +155,12 @@ namespace L2{
             case SOP:
             case LEA:
             case ASSIGN_CMP:
-                return ComputeSet(Subvector(i->args, 0 , 1)); // hope 0 to 0 works
+                v1 = Subvector(i->args, 0 , 1);
+                return ComputeSet(v1); // hope 0 to 0 works
             case CALL_LOCAL:
             case CALL_RUNTIME:
-                return ComputeSet(KillCallerSaved());
+                v2 = KillCallerSaved();
+                return ComputeSet(v2);
             default:
                 return OUR_SET();
         }
@@ -235,12 +247,17 @@ namespace L2{
 
     bool areDifferent(OUR_SET & set1, OUR_SET & set2){
         if(set1.size() != set2.size()) return true;
-        OUR_SET diff;
-        std::set_symmetric_difference(set1.begin(), set1.end(), set2.begin(), set2.end(), std::inserter(diff, diff.begin()), L2_Compare());
-        return !diff.empty();
+        auto it2 = set2.begin();
+        for (auto it1 = set1.begin(); it1 != set1.end(); ++it1){
+            if(!(*it1)->equals(*it2++)) return true;
+        }
+        return false;
+        // OUR_SET diff;
+        // std::set_symmetric_difference(set1.begin(), set1.end(), set2.begin(), set2.end(), std::inserter(diff, diff.begin()), L2_Compare());
+        // return !diff.empty();
     }
 
-    DataFlowResult* computeLivenessAnalysis(Program p, Function* f) {
+    DataFlowResult* computeLivenessAnalysis( Function* f) {
         vector<OUR_SET> gen_sets;
         vector<OUR_SET> kill_sets;
 

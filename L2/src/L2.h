@@ -179,7 +179,7 @@ namespace L2 {
         std::string toString();
     };
 
-    std::vector<L2_Item*> mapToRegisters(std::vector<regType> regs);
+    std::vector<L2_Item*> mapToRegisters(std::vector<regType> * regs);
 
     //Program parse_spill_file(char **argv);
     //void REG_spill(Program p, Function* f, char **argv);
@@ -192,7 +192,7 @@ namespace L2 {
     OUR_SET ComputeKill(Instruction* i);
     OUR_SET ComputeGen(Instruction* i);
     std::string SetToString(OUR_SET s);
-    DataFlowResult* computeLivenessAnalysis(Program p, Function* f);
+    DataFlowResult* computeLivenessAnalysis( Function* f);
     InterferenceGraph* computeInterferenceGraph(Function* f, DataFlowResult* dfr);
     ColoredGraph* computeColoredGraph(InterferenceGraph* i);
     void printIGraph(InterferenceGraph* i);

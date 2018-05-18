@@ -32,7 +32,7 @@ namespace L2{
     f->instructions = newInstructions;
   }
 
-  void generate_code(Program p){
+  void generate_code(Program & p){
 
     for( auto f : p.functions ) {
       vector<pair<L2_Item*, regType>> colored;
@@ -43,7 +43,7 @@ namespace L2{
         colored.clear();
         needToSpill = false;
         // cout << "gen code" << f->name << endl;
-        auto liveness = L2::computeLivenessAnalysis(p, f);
+        auto liveness = L2::computeLivenessAnalysis( f);
         // cout << "liveness" << endl;
         auto ig = L2::computeInterferenceGraph(f, liveness);
         // cout << "intereference" << endl;

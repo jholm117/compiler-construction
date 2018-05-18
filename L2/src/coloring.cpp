@@ -59,7 +59,7 @@ namespace L2 {
   }
 
   // addNode 'puts a node back in the graph', by completing the connection between its edges and other nodes
-  void addNode(pair<L2_Item*, OUR_SET> item, InterferenceGraph* i) {
+  void addNode(pair<L2_Item*, OUR_SET> & item, InterferenceGraph* i) {
     i->insert(item);
     // for( auto missingEdgeItem : i->at(item) ) {
     //   i->at(missingEdgeItem).insert(item);
@@ -79,7 +79,7 @@ namespace L2 {
     return orderedStack;
   }
 
-  regType chooseColor(OUR_SET edges, ColoredGraph* c, InterferenceGraph* i) {
+  regType chooseColor(OUR_SET & edges, ColoredGraph* c, InterferenceGraph* i) {
     set<regType> availableColors;
 
 
@@ -110,7 +110,7 @@ namespace L2 {
   }
 
 
-  ColoredGraph* colorGraph(vector<pair<L2_Item*, OUR_SET>> stack, InterferenceGraph* i) {
+  ColoredGraph* colorGraph(vector<pair<L2_Item*, OUR_SET>> & stack, InterferenceGraph* i) {
     ColoredGraph* cgraph = new ColoredGraph();
     while( stack.size() > 0 ) {
       pair<L2_Item*, OUR_SET> currentItem = stack.back();

@@ -163,7 +163,7 @@ int main(
       /*
        * Compute the liveness analysis.
        */
-      auto liveness = L2::computeLivenessAnalysis(p, f);
+      auto liveness = L2::computeLivenessAnalysis( f);
 
       /*
        * Print the liveness.
@@ -189,7 +189,7 @@ int main(
       /*
        * Compute the liveness analysis.
        */
-      L2::DataFlowResult* liveness = L2::computeLivenessAnalysis(p, f);
+      L2::DataFlowResult* liveness = L2::computeLivenessAnalysis( f);
 
       /*
        * Compute the interference graph.

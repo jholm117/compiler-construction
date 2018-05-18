@@ -17,7 +17,7 @@ namespace L2 {
     }
   }
 
-  void connectTwoSets( OUR_SET s1, OUR_SET s2, InterferenceGraph* g){
+  void connectTwoSets( OUR_SET & s1, OUR_SET & s2, InterferenceGraph* g){
     for(L2_Item* i1 : s1){
       for(L2_Item* i2 : s2){
         makeEdge(i1, i2, g);
@@ -25,16 +25,16 @@ namespace L2 {
     }
   }
 
-  void connectKillAndOut( OUR_SET kill, OUR_SET out, InterferenceGraph* g, Instruction* i ) {
+  void connectKillAndOut( OUR_SET & kill, OUR_SET & out, InterferenceGraph* g, Instruction* i ) {
     if(i->type != ASSIGN || i->args[2]->item_type != VAREXP ){
         connectTwoSets( kill, out, g );
     }
   }
 
-  InterferenceGraph* initializeGraph(std::vector<OUR_SET> in_sets, std::vector<OUR_SET> kill_sets){
+  InterferenceGraph* initializeGraph(std::vector<OUR_SET> & in_sets, std::vector<OUR_SET> & kill_sets){
     InterferenceGraph* g = new InterferenceGraph();
     // Add all registers
-    for(auto r : mapToRegisters(writeableRegisters)){
+    for(auto r : mapToRegisters(&writeableRegisters)){
       addItemToGraph(r, g);
     }
 
@@ -62,7 +62,7 @@ namespace L2 {
 
   void addConstraints( Instruction* i, InterferenceGraph* g){
     if( i->type == SOP && i->args[2]->item_type == VAREXP ){
-      for (auto r : mapToRegisters(nonRCXregisters)){
+      for (auto r : mapToRegisters(&nonRCXregisters)){
         makeEdge(i->args[2], r, g);
       }
     }
