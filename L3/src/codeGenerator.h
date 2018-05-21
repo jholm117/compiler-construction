@@ -1,6 +1,7 @@
 #pragma once
 
 #include <L3.h>
+#include <instructionSelection.h>
 
 namespace L3 {
 
