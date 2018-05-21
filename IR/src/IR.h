@@ -3,28 +3,57 @@
 #include <string>
 #include <vector>
 #include <tuple>
+#include <iostream>
+
 
 using namespace std;
 
 namespace IR{
 
-    struct IR_Item {};
+    struct IR_Item {
+        virtual ~IR_Item(){}
+        string name;
+    };
 
-    struct Variable : IR_Item {};
-    struct Label : IR_Item {};
-    struct Number : IR_Item {};
-    struct Operator : IR_Item {};
-    struct Runtime_Function : IR_Item {};
+    struct StringItem : IR_Item {
+    };
+
+    struct Variable : StringItem {};
+    struct Label : StringItem {};
+    struct Runtime_Function : StringItem {};
+
+    struct Number : IR_Item {
+        int value;
+    };
+
+    // enum IR_OperatorType {
+    //     PLUS,
+    //     MINUS,
+    //     STAR,
+    //     AND,
+    //     SHIFT_LEFT,
+    //     SHIFT_RIGHT,
+    //     LESS_THAN,
+    //     LESS_THAN_EQ,
+    //     EQ,
+    //     GREATER_THAN,
+    //     GREATER_THAN_EQ
+    // };
+
+    struct Operator : StringItem {};
+
     struct Type : IR_Item {};
 
     struct Void : Type {};
-    struct Int64 : Type {};
-    struct Int64_Array : Type {};
+    struct Int64 : Type {
+        int dimension;
+    };
     struct Tuple : Type {};
     struct Code : Type {};
 
     struct Instruction {
         vector<IR_Item*> args;
+        virtual ~Instruction(){}
     };
 
     struct Branch_I : Instruction {};
@@ -45,16 +74,16 @@ namespace IR{
     
     struct BasicBlock {
         Label label;
-        vector<Instruction> instructions;        
+        vector<Instruction*> instructions;        
     };
 
-    typedef tuple<Type, Variable> Parameter;
+    typedef tuple< Type*, Variable > Parameter;
 
     struct Function {
         Type returnType;
         Label name;
         vector<Parameter> parameters;
-        vector<BasicBlock> basicBlocks;
+        vector<BasicBlock*> basicBlocks;
     };
 
     struct Program {

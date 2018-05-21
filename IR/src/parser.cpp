@@ -1,4 +1,5 @@
 #include <parser.h>
+#include <algorithm>
 
 #include <tao/pegtl.hpp>
 #include <tao/pegtl/analyze.hpp>
@@ -10,6 +11,14 @@ using namespace std;
 using namespace pegtl;
 
 namespace IR {
+
+    vector<IR_Item*> parsedItems;
+
+    IR_Item* pop_item(){
+        auto item = parsedItems.back();
+        parsedItems.pop_back();
+        return item;
+    }
 
      struct comment: 
         pegtl::disable< 
@@ -92,19 +101,35 @@ namespace IR {
             var
         >{};
 
+    struct tuple_rule:
+        TAOCPP_PEGTL_STRING("tuple"){};
+
+    struct code_rule:
+        TAOCPP_PEGTL_STRING("code"){};
+    
+    struct void_rule:
+        TAOCPP_PEGTL_STRING("void"){};
+
+    struct int64_rule:
+        pegtl::seq<
+            TAOCPP_PEGTL_STRING("int64"),
+            pegtl::star< TAOCPP_PEGTL_STRING("[]") >
+        >{};
+
     struct type_rule:
         pegtl::sor<
-            TAOCPP_PEGTL_STRING("tuple"),
-            TAOCPP_PEGTL_STRING("code"),
-            TAOCPP_PEGTL_STRING("void"),
-            pegtl::seq<
-                TAOCPP_PEGTL_STRING("int64"),
-                pegtl::star< TAOCPP_PEGTL_STRING("[]") >
-            >
+            tuple_rule,
+            code_rule,
+            int64_rule
         >{};
         
     struct return_type_rule:
-        type_rule {};
+        pegtl::sor<
+            tuple_rule,
+            code_rule,
+            void_rule,
+            int64_rule
+        >{};
 
     struct variable_or_number:
         pegtl::sor<
@@ -240,20 +265,17 @@ namespace IR {
         >{};
 
     struct args_rule:
-        pegtl::sor<
-            pegtl::seq<
-                variable_or_number,
-                pegtl::star<
-                    seps,
-                    pegtl::one< ',' >,
-                    seps,
-                    variable_or_number
-                >
-            >,
-            pegtl::success   
+        pegtl::seq<
+            variable_or_number,
+            pegtl::star<
+                seps,
+                pegtl::one< ',' >,
+                seps,
+                variable_or_number
+            >
         > {};
 
-    struct runtime_function:
+    struct runtime_function_rule:
         pegtl::sor<
             TAOCPP_PEGTL_STRING("print"),
             TAOCPP_PEGTL_STRING("array-error")
@@ -263,7 +285,7 @@ namespace IR {
         pegtl::sor<
             variable_rule,
             label_rule,
-            runtime_function
+            runtime_function_rule
         >{};
 
     struct call_rule:
@@ -274,7 +296,7 @@ namespace IR {
             seps,
             one< '(' >,
             seps,
-            args_rule,
+            pegtl::opt< args_rule >,
             seps,
             one< ')' >
         >{};
@@ -327,38 +349,45 @@ namespace IR {
 
     struct terminus_rule:
         pegtl::sor<
-            pegtl::seq< pegtl::not_at< conditional_branch_i >, conditional_branch_i >,
-            pegtl::seq< pegtl::not_at< branch_i >, branch_i >,
-            pegtl::seq< pegtl::not_at< return_value_i >, return_value_i >,
-            pegtl::seq< pegtl::not_at< return_i >, return_i >
+            pegtl::seq< pegtl::at< conditional_branch_i >, conditional_branch_i >,
+            pegtl::seq< pegtl::at< branch_i >, branch_i >,
+            pegtl::seq< pegtl::at< return_value_i >, return_value_i >,
+            pegtl::seq< pegtl::at< return_i >, return_i >
         >{};
 
     struct instruction_rule:
         pegtl::seq<
             seps,
             pegtl::sor<
-                pegtl::seq< pegtl::not_at< type_var_i >, type_var_i >,
-                pegtl::seq< pegtl::not_at< assign_i >, assign_i >,
-                pegtl::seq< pegtl::not_at< assign_op_i >, assign_op_i >,
-                pegtl::seq< pegtl::not_at< array_load_i >, array_load_i >,
-                pegtl::seq< pegtl::not_at< array_store_i >, array_store_i >,
-                pegtl::seq< pegtl::not_at< length_i >, length_i >,
-                pegtl::seq< pegtl::not_at< call_i >, call_i >,
-                pegtl::seq< pegtl::not_at< assign_call_i >, assign_call_i >,
-                pegtl::seq< pegtl::not_at< new_array_i >, new_array_i >,
-                pegtl::seq< pegtl::not_at< new_tuple_i >, new_tuple_i >
+                pegtl::seq< pegtl::at< type_var_i >, type_var_i >,
+                pegtl::seq< pegtl::at< assign_op_i >, assign_op_i >,
+                pegtl::seq< pegtl::at< array_load_i >, array_load_i >,
+                pegtl::seq< pegtl::at< array_store_i >, array_store_i >,
+                pegtl::seq< pegtl::at< length_i >, length_i >,
+                pegtl::seq< pegtl::at< call_i >, call_i >,
+                pegtl::seq< pegtl::at< assign_call_i >, assign_call_i >,
+                pegtl::seq< pegtl::at< new_array_i >, new_array_i >,
+                pegtl::seq< pegtl::at< new_tuple_i >, new_tuple_i >,
+                pegtl::seq< pegtl::at< assign_i >, assign_i >
             >,
             seps
         >{};
 
+    struct basic_block_name_rule:
+        label_rule {};
+
     struct basic_block_rule:
         pegtl::seq<
             seps,
-            label_rule,
+            basic_block_name_rule,
+            seps,
             pegtl::star< instruction_rule >,
             terminus_rule,
             seps
         >{};
+
+    struct function_name_rule:
+        label_rule{};
 
     struct function_rule:
         pegtl::seq<
@@ -367,9 +396,10 @@ namespace IR {
             seps,
             return_type_rule,
             seps,
-            label_rule,
+            function_name_rule,
             seps,
             one< '(' >,
+            seps,
             pegtl::star< parameter_rule >,
             one< ')' >,
             seps,
@@ -387,6 +417,269 @@ namespace IR {
 
     template< typename Rule >
     struct action : pegtl::nothing< Rule > {};
+
+    void cacheStringItem(StringItem* i, std::string str){
+        i->name = str;
+        parsedItems.push_back(i);
+    }
+
+    // IR_OperatorType parseOperator(std::string str){
+    //     if(str == "+") return PLUS;
+    //     if(str == "-") return MINUS;
+    //     if(str == "*") return STAR;
+    //     if(str == "") return AND;
+    //     if(str == "") return SHIFT_LEFT;
+    //     if(str == "") return SHIFT_RIGHT;
+    //     if(str == "") return LESS_THAN;
+    //     if(str == "") return LESS_THAN_EQ;
+    //     if(str == "") return EQ;
+    //     if(str == "") return GREATER_THAN;
+    //     if(str == ">=") return GREATER_THAN_EQ;
+    // }
+
+    /*
+    *   IR_Item Actions
+    */
+
+    template<> struct action < variable_rule > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            cacheStringItem(new Variable(), in.string());
+        }
+    };
+
+    template<> struct action < label_rule > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            cacheStringItem(new Label(), in.string());
+        }
+    };
+
+    template<> struct action < runtime_function_rule > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            cacheStringItem(new Runtime_Function(), in.string());
+        }
+    };
+
+    template<> struct action < number_rule > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            auto n = new Number();
+            n->name = in.string();
+            n->value = stoi(in.string());
+            parsedItems.push_back(n);
+        }
+    };
+
+    template<> struct action < tuple_rule > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            auto t = new Tuple();
+            t->name = in.string();
+            parsedItems.push_back(t);
+        }
+    };
+
+    template<> struct action < code_rule > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            auto t = new Code();
+            t->name = in.string();
+            parsedItems.push_back(t);
+        }
+    };
+
+    template<> struct action < void_rule > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            auto t = new Void();
+            t->name = in.string();
+            parsedItems.push_back(t);
+        }
+    };
+
+    template<> struct action < int64_rule > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            auto t = new Int64();
+            t->name = in.string();
+            t->dimension = std::count(in.string().begin(), in.string().end(), '[' );
+            parsedItems.push_back(t);
+        }
+    };
+
+    template<> struct action < op_rule > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            cacheStringItem(new Operator(), in.string());
+        }
+    };
+
+    /*
+    *   Instruction Actions
+    */
+
+    void instructionAction(Instruction* inst, Program & p){
+        inst->args = parsedItems;
+        parsedItems.clear();
+        p.functions.back()->basicBlocks.back()->instructions.push_back(inst);
+    }
+
+    template<> struct action < assign_i > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            instructionAction(new Assign_I(), p);
+        }
+    };
+
+    template<> struct action < branch_i > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            instructionAction(new Branch_I(), p);
+        }
+    };
+
+    template<> struct action < conditional_branch_i > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            instructionAction(new Conditional_Branch_I(), p);
+        }
+    };
+
+    template<> struct action < return_i > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            instructionAction(new Return_I(), p);
+        }
+    };
+
+    template<> struct action < return_value_i > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            instructionAction(new Return_Value_I(), p);
+        }
+    };
+
+    template<> struct action < type_var_i > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            instructionAction(new Type_Var_I(), p);
+        }
+    };
+
+    template<> struct action < assign_op_i > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            instructionAction(new Assign_Op_I(), p);
+        }
+    };
+
+    template<> struct action < array_load_i > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            instructionAction(new Array_Load_I(), p);
+        }
+    };
+
+    template<> struct action < array_store_i > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            instructionAction(new Array_Store_I(), p);
+        }
+    };
+
+    template<> struct action < length_i > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            instructionAction(new Length_I(), p);
+        }
+    };
+
+    template<> struct action < call_i > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            instructionAction(new Call_I(), p);
+        }
+    };
+
+    template<> struct action < new_tuple_i > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            instructionAction(new New_Tuple_I(), p);
+        }
+    };
+
+    template<> struct action < new_array_i > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            instructionAction(new New_Array_I(), p);
+        }
+    };
+
+    /*
+    *   Function-Level Actions
+    */
+
+    template<> struct action < function_name_rule > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            Label l;
+            l.name = in.string();
+            Function* f = new Function();
+            f->name = l;
+            auto t = dynamic_cast<Type*>(pop_item());
+            f->returnType = *t; 
+            p.functions.push_back(f);
+        }
+    };
+
+    template<> struct action < parameter_rule > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            auto var = dynamic_cast<Variable*>(pop_item());
+            auto type = dynamic_cast<Type*>(pop_item());
+            IR::Parameter param ( type, *var );
+
+            p.functions.back()->parameters.push_back(param);
+        }
+    };
+
+    template<> struct action < basic_block_name_rule > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            Label l;
+            l.name = in.string();
+            auto bb = new BasicBlock();
+            bb->label = l;
+            p.functions.back()->basicBlocks.push_back(bb);
+        }
+    };
 
     Program parseFile(char* filename){
         pegtl::analyze< IR::grammar >();

@@ -1,0 +1,31 @@
+define void :main (){
+    :first
+    code %v1
+    %v2 <- 8
+    %v3 <- %v2 + 2
+    %v4 <- %v3[6][7]
+    return
+    
+    :second
+    %v5[6] <- :uhsuhh
+    br :first
+}
+
+define tuple :myF (){
+    :entry
+    %v1 <- length %v2 8
+    call print(7)
+    call array-error(%v1, %v2)
+    call :main ()
+    call %v2 ()
+    br 8 :stop :go
+
+    :whatsup
+    %hello <- call :myF ()
+    %v1 <- new Array(6, 7)
+    %v1 <- new Array(%v9, 7)
+    %v1 <- new Tuple(6)
+    
+    return 5
+
+}
