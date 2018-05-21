@@ -19,4 +19,8 @@ namespace L3 {
   };
 
   std::string transformContext(vector<Contextual_I*> & v);
+  std::string transformInstruction(Contextual_I* i);
+  struct L2_Tile {
+    virtual string toString() = 0;
+  };
 }

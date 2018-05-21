@@ -63,84 +63,6 @@ namespace L3{
             default: return "error";
         }
     }
- 
-    string Instruction::toString(){
-        return i_line("instruction");
-    }
-
-    string Assign_I::toString(){
-        auto dst = this->args.front()->toString();
-        auto src = this->args.back()->toString();
-        return i_line(dst + " <- " + src);
-    }
-
-    string Load_I::toString(){
-        auto dst = this->args.front()->toString();
-        auto addr = this->args.back()->toString();
-        return i_line(dst + " <- mem " + addr + " 0");
-    }
-
-    string Store_I::toString(){
-        auto addr = this->args.front()->toString();
-        auto src = this->args.back()->toString();
-        return i_line("mem " + addr + " 0 <- " + src);
-    }
-
-    string normalAssignOpI(string dst, string src, Operator* op, string src2){
-        string s;
-        s += i_line( dst + " <- " + src );
-        s += i_line( dst + " " + op->toString() + " " + src2 );
-        return s;
-    }
-
-    string Assign_Op_I::toString(){
-        auto op = (Operator*)this->args[2];
-        auto dst = this->args.front()->toString();
-        auto src = this->args[1]->toString();
-        auto src2 = this->args.back()->toString();
-        switch(op->op){
-            case GREATER_THAN:
-                return i_line( dst + " <- " + src2 + " < " + src );
-            case GREATER_THAN_EQ:
-                return i_line( dst + " <- " + src2 + " <= " + src );
-            case LESS_THAN:
-            case LESS_THAN_EQ:
-            case EQ:
-                return i_line( dst + " <- " + src + " " + op->toString() + " " + src2 );
-                // bug here
-            // case SHIFT_LEFT:
-            // case SHIFT_RIGHT:
-            //     if(dst == src){
-            //         return i_line(dst + " " + op->toString() + " " + src2);
-            //     } else if(dst == src2){
-            //         string s;
-            //         s+= i_line(dst + " *= -1");
-            //         s+= i_line(dst + " += " + src);
-            //         return s;
-            //     } else {
-            //         return normalAssignOpI(dst, src, op, src2);
-            //     }
-            case MINUS:
-                if(dst == src){
-                    return i_line(dst + " " + op->toString() + " " + src2);
-                } else if(dst == src2){
-                    string s;
-                    s+= i_line(dst + " *= -1");
-                    s+= i_line(dst + " += " + src);
-                    return s;
-                } else {
-                    return normalAssignOpI(dst, src, op, src2);
-                }
-            default:
-                if(dst == src){
-                    return i_line(dst + " " + op->toString() + " " + src2);
-                } else if(dst == src2) {
-                    return i_line(dst + " " + op->toString() + " " + src);
-                } else{
-                    return normalAssignOpI(dst, src, op, src2);
-                }
-        }
-    }
 
     string Branch_I::toString(){
         return i_line("goto " + this->args.front()->toString());
@@ -223,24 +145,19 @@ namespace L3{
         return s;
     }
 
-    string Function::toString(){
+    string Function::toString() {
         auto s = f_line("(" + this->name->toString());
-        // vector<Contextual_I*> context;
 
         s += i_line(to_string(this->arguments.size()) + " 0");
         s += calleeCC(this->arguments);
+
         for (auto i : this->instructions){
-            // cout << i->toString();
-            if (dynamic_cast<Contextual_I*>(i)){
-                // context.push_back((Contextual_I*)i);
-                
-                s += i->toString();
+            auto i_cast = dynamic_cast<Contextual_I*>(i);
+            if (i_cast){
+                s += transformInstruction(i_cast);
+            } else {
+                s += ((CallingC_I*)i)->toString();
             }
-            if (dynamic_cast<CallingC_I*>(i)){
-                // s += transformContext(context);
-                // context.clear();
-                s += i->toString();
-            }            
         }
         s += f_line(")");
         return s;

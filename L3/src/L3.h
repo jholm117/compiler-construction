@@ -59,30 +59,34 @@ namespace L3{
         string toString() override;
     };
 
+    struct SOAP : Operator {
+        SOAP (L3_OperatorType o ) : Operator (o){}
+    };
+
+    struct CMP : Operator {
+        CMP (L3_OperatorType o) : Operator(o){}
+    };
+
     struct Instruction {
-        virtual string toString();
         vector<L3_Item*> args;
+        virtual ~Instruction(){}
     };
 
-    struct Contextual_I  : Instruction {};
+    struct Contextual_I : Instruction {};
 
-    struct CallingC_I : Instruction {};
-
-    struct Assign_I : Contextual_I {
-        string toString() override;
+    struct CallingC_I : Instruction {
+        virtual string toString()=0;
     };
 
-    struct Assign_Op_I : Contextual_I {
-        string toString() override;
-    };
+    struct Assign_I : Contextual_I {};
 
-    struct Load_I : Contextual_I {
-        string toString() override;
-    };
+    struct Assign_Op_I : Contextual_I {};
 
-    struct Store_I : Contextual_I {
-        string toString() override;
-    };
+    struct Assign_Cmp_I : Contextual_I{};
+
+    struct Load_I : Contextual_I {};
+
+    struct Store_I : Contextual_I {};
 
     struct Label_I : CallingC_I {
         string toString() override;

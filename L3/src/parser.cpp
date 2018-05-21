@@ -331,11 +331,6 @@ namespace L3{
             entryPointRule
         > {};
 
-    void cacheOperator(std::string str){
-        L3::Operator* n = new L3::Operator( stringToOperatorType(str) );
-        parsedItems.push_back(n);
-    }
-
     void instructionAction(Instruction* i, Program& p){
         i->args = parsedItems;
         parsedItems.clear();
@@ -405,14 +400,16 @@ namespace L3{
     template<> struct action < op > {
         template< typename Input >
         static void apply( const Input & in, L3::Program & p){
-            cacheOperator(in.string());
+            auto o = new L3::SOAP( stringToOperatorType(in.string() ) );
+            parsedItems.push_back(o);
         }
     };
 
     template<> struct action < cmp > {
         template< typename Input >
         static void apply( const Input & in, L3::Program & p){
-            cacheOperator(in.string());
+            auto c = new L3::CMP( stringToOperatorType(in.string()));
+            parsedItems.push_back(c);
         }
     };
 
@@ -453,7 +450,7 @@ namespace L3{
     template<> struct action < assign_comp_i > {
         template< typename Input >
         static void apply( const Input & in, L3::Program & p){
-            instructionAction(new Assign_Op_I(), p);
+            instructionAction(new Assign_Cmp_I(), p);
         }
     };
 
