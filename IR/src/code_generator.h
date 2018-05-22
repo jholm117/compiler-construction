@@ -5,5 +5,5 @@
 
 namespace IR {
     
-    void generate_code(Program & p);
+    std::string generate_code(Program & p);
 }

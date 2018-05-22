@@ -430,7 +430,7 @@ namespace IR {
         template< typename Input >
         static void apply( const Input & in, IR::Program & p){
             // cout << in.string() << endl;
-            cacheStringItem(new Variable(), in.string());
+            cacheStringItem(new Variable(), in.string().substr(1));
         }
     };
 
@@ -605,6 +605,14 @@ namespace IR {
         static void apply( const Input & in, IR::Program & p){
             // cout << in.string() << endl;
             instructionAction(new Call_I(), p);
+        }
+    };
+
+    template<> struct action < assign_call_i > {
+        template< typename Input >
+        static void apply( const Input & in, IR::Program & p){
+            // cout << in.string() << endl;
+            instructionAction(new Assign_Call_I(), p);
         }
     };
 

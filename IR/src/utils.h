@@ -31,4 +31,12 @@ namespace utils {
         return std::get<1>(pair);
     }
 
+    template < typename T >
+    vector<T> subvector(vector<T> & vec, int start, int end){
+        auto first = vec.begin() + start;
+        auto last = vec.begin() + end;
+        return vector<T> (first, last);
+    }
+    
+
 }

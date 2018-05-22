@@ -55,27 +55,47 @@ namespace IR{
     struct Instruction {
         vector<IR_Item*> args;
         virtual ~Instruction(){}
+        virtual string to_L3();
     };
 
-    struct Branch_I : Instruction {};
-    struct Conditional_Branch_I : Instruction {};
-    struct Return_I : Instruction {};
-    struct Return_Value_I : Instruction {};
-    struct Type_Var_I : Instruction {};
-    struct Assign_I : Instruction {};
-    struct Assign_Op_I : Instruction {};
+    struct Branch_I : Instruction {
+        string to_L3() override;
+    };
+    struct Conditional_Branch_I : Instruction {
+        string to_L3() override;
+    };
+    struct Return_I : Instruction {
+        string to_L3() override;
+    };
+    struct Return_Value_I : Instruction {
+        string to_L3() override;
+    };
+    struct Assign_I : Instruction {
+        string to_L3() override;
+    };
+    struct Assign_Op_I : Instruction {
+        string to_L3() override;
+    };
+    struct Call_I : Instruction {
+        string to_L3() override;
+    };
+    struct Assign_Call_I : Instruction {
+        string to_L3() override;
+    };
+    
     struct Array_Load_I : Instruction {};
     struct Array_Store_I : Instruction {};
     struct Length_I : Instruction {};
-    struct Call_I : Instruction {};
-    struct Assign_Call_I : Instruction {};
     struct New_Array_I : Instruction {};
     struct New_Tuple_I : Instruction {};
+    struct Type_Var_I : Instruction {};
+    
 
     
     struct BasicBlock {
         Label label;
-        vector<Instruction*> instructions;        
+        vector<Instruction*> instructions;
+        string to_L3();        
     };
 
     typedef tuple< Type*, Variable > Parameter;
@@ -85,9 +105,11 @@ namespace IR{
         Label name;
         vector<Parameter> parameters;
         vector<BasicBlock*> basicBlocks;
+        string to_L3();
     };
 
     struct Program {
         vector<Function*> functions;
+        string to_L3();
     };
 }

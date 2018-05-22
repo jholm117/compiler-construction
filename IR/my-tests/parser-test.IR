@@ -2,7 +2,12 @@ define void :main (){
     :first
     code %v1
     %v2 <- 8
+    
     %v3 <- %v2 + 2
+    %v3 <- 2 + 2
+    %v3 <- %v2 + %v2
+    %v3 <- 2 + %v2
+
     %v4 <- %v3[6][7]
     return
     
@@ -18,7 +23,14 @@ define tuple :myF (code %v1 int64 %v2 tuple %v3 ){
     call array-error(%v1, %v2)
     call :main ()
     call %v2 ()
+    
+    
     br 8 :stop :go
+
+
+
+    :yo
+    br %v9 :hola :false
 
     :whatsup
     %hello <- call :myF ()
@@ -28,4 +40,10 @@ define tuple :myF (code %v1 int64 %v2 tuple %v3 ){
     
     return 5
 
+}
+
+define void :myF2 (){
+    :entry
+    %v2 <- call :myF (7, 2) 
+    return
 }
