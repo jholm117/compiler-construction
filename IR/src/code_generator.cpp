@@ -20,6 +20,12 @@ namespace IR {
     const string OPEN_BRACE = "{";
     const string CLOSED_BRACE = "}";
     const string TAB = "\t";
+    const string STAR = " * ";
+    const string EIGHT = "8";
+    const string SIXTEEN = "16";
+    const string PLUS = " + ";
+    const string LOAD = "load";
+    const string NEW_LINE_TAB = "\n\t";
 
     void printParsedItems(Program & p){
         for (auto f : p.functions){
@@ -51,7 +57,20 @@ namespace IR {
     }
 
     string Branch_I::to_L3(){
-        return BR + this->args[0]->name;
+        return NEW_LINE_TAB + BR + this->args[0]->name;
+    }
+
+    string Length_I::to_L3(){
+        auto v0 = new_var_name();
+        auto v1 = new_var_name();
+        auto v2 = new_var_name();
+
+        string s;
+        s += NEW_LINE_TAB + v0 + ARROW + ARG(2) + STAR + EIGHT;
+        s += NEW_LINE_TAB + v1 + ARROW + v0 + PLUS + SIXTEEN;
+        s += NEW_LINE_TAB + v2 + ARROW + ARG(1) + PLUS + v1;
+        s += NEW_LINE_TAB + ARG(0) + ARROW + LOAD + SPACE + v2;
+        return s;
     }
 
     string Conditional_Branch_I::to_L3(){
@@ -60,31 +79,31 @@ namespace IR {
         string cmp_var;
         if(dynamic_cast<Number*>(cmpItem)){
             cmp_var = new_var_name();
-            ret_str += cmp_var + ARROW + cmpItem->name + NEW_LINE + TAB;
+            ret_str += NEW_LINE_TAB + cmp_var + ARROW + cmpItem->name;
         } else {
             cmp_var = cmpItem->name;
         }
-        ret_str +=  BR + cmp_var + SPACE + this->args[1]->name + SPACE + this->args[2]->name ;
+        ret_str += NEW_LINE_TAB + BR + cmp_var + SPACE + this->args[1]->name + SPACE + this->args[2]->name ;
         return ret_str;
     }
     
     string Return_I::to_L3(){
-        return RETURN;
+        return NEW_LINE_TAB + RETURN;
     }
 
     string Return_Value_I::to_L3(){
-        return RETURN + this->args[0]->name;
+        return NEW_LINE_TAB + RETURN + this->args[0]->name;
     }
 
     string Assign_I::to_L3(){
-        return this->args[0]->name + ARROW + this->args[1]->name;
+        return NEW_LINE_TAB + ARG(0) + ARROW + ARG(1);
     }
 
     string Assign_Op_I::to_L3(){
-        return ARG(0) + ARROW + ARG(1) + SPACE + ARG(2) + SPACE + ARG(3);
+        return NEW_LINE_TAB + ARG(0) + ARROW + ARG(1) + SPACE + ARG(2) + SPACE + ARG(3);
     }
 
-    string translateCall(string callee, vector<IR_Item*> & args){
+    string translateCall(string & callee, vector<IR_Item*> & args){
         string s = CALL + callee + OPEN_PAREN;
         int count=0;
         for(auto arg : args){
@@ -96,20 +115,18 @@ namespace IR {
 
     string Call_I::to_L3(){
         auto call_args = utils::subvector(this->args, 1, this->args.size());
-        return translateCall( ARG(0), call_args );
+        return NEW_LINE_TAB + translateCall( ARG(0), call_args );
     }
 
     string Assign_Call_I::to_L3(){
         auto call_args = utils::subvector(this->args, 2, this->args.size());
-        auto s = ARG(0) + ARROW;
-        s += translateCall( ARG(1), call_args );
-        return s;
+        return NEW_LINE_TAB + ARG(0) + ARROW + translateCall( ARG(1), call_args );
     }
 
     string BasicBlock::to_L3(){
-        string bb = TAB + this->label.name + NEW_LINE;
+        string bb = NEW_LINE_TAB + this->label.name;
         for(auto i : this->instructions){
-            bb += TAB + i->to_L3() + NEW_LINE;
+            bb += i->to_L3();
         }
         return bb;
     }
@@ -122,12 +139,12 @@ namespace IR {
             auto var_name = utils::pair_second(p).name;
             f += count++ > 0 ? COMMA + var_name : var_name;
         }
-        f += CLOSED_PAREN + OPEN_BRACE + NEW_LINE;
+        f += CLOSED_PAREN + OPEN_BRACE;
         for (auto bb : this->basicBlocks){
             f += bb->to_L3();
         }
         
-        f += CLOSED_BRACE + NEW_LINE + NEW_LINE;
+        f += NEW_LINE + CLOSED_BRACE + NEW_LINE + NEW_LINE;
         return f;
     }
 

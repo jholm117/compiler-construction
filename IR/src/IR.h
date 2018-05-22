@@ -82,10 +82,12 @@ namespace IR{
     struct Assign_Call_I : Instruction {
         string to_L3() override;
     };
+    struct Length_I : Instruction {
+        string to_L3() override;
+    };
     
     struct Array_Load_I : Instruction {};
     struct Array_Store_I : Instruction {};
-    struct Length_I : Instruction {};
     struct New_Array_I : Instruction {};
     struct New_Tuple_I : Instruction {};
     struct Type_Var_I : Instruction {};
