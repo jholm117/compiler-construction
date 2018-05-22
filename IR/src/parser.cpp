@@ -13,14 +13,8 @@ using namespace pegtl;
 namespace IR {
 
     vector<IR_Item*> parsedItems;
-
-    IR_Item* pop_item(){
-        auto item = parsedItems.back();
-        parsedItems.pop_back();
-        return item;
-    }
-
-     struct comment: 
+    
+    struct comment: 
         pegtl::disable< 
             TAOCPP_PEGTL_STRING( "//" ), 
             pegtl::until< pegtl::eolf > 
@@ -83,15 +77,6 @@ namespace IR {
     struct variable_rule:
         pegtl::seq<
             pegtl::one< '%' >,
-            // pegtl::not_at<
-            //     pegtl::seq<
-            //         keyword,
-            //         pegtl::sor< 
-            //             pegtl::ascii::space, 
-            //             comment 
-            //         >
-            //     >
-            // >,
             var
         > {};
 
@@ -651,8 +636,8 @@ namespace IR {
             l.name = in.string();
             Function* f = new Function();
             f->name = l;
-            auto t = dynamic_cast<Type*>(pop_item());
-            f->returnType = *t; 
+            Type* type = dynamic_cast<Type*>(utils::pop_item(parsedItems));
+            f->returnType = *type; 
             p.functions.push_back(f);
         }
     };
@@ -661,9 +646,10 @@ namespace IR {
         template< typename Input >
         static void apply( const Input & in, IR::Program & p){
             // cout << in.string() << endl;
-            auto var = dynamic_cast<Variable*>(pop_item());
-            auto type = dynamic_cast<Type*>(pop_item());
-            IR::Parameter param ( type, *var );
+            Variable* var_cast = dynamic_cast<Variable*>(utils::pop_item(parsedItems));
+            Type* type_cast = dynamic_cast<Type*>(utils::pop_item(parsedItems));
+
+            IR::Parameter param ( type_cast, *var_cast );
 
             p.functions.back()->parameters.push_back(param);
         }

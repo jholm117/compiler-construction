@@ -11,7 +11,7 @@ define void :main (){
     br :first
 }
 
-define tuple :myF (){
+define tuple :myF (code %v1 int64 %v2 tuple %v3 ){
     :entry
     %v1 <- length %v2 8
     call print(7)
