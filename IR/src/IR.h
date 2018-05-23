@@ -4,6 +4,7 @@
 #include <vector>
 #include <tuple>
 #include <iostream>
+#include <unordered_map>
 #include <utils.h>
 
 
@@ -19,7 +20,18 @@ namespace IR{
     struct StringItem : IR_Item {
     };
 
-    struct Variable : StringItem {};
+    struct Type : IR_Item {};
+
+    struct Void : Type {};
+    struct Int64 : Type {
+        int dimension;
+    };
+    struct Tuple : Type {};
+    struct Code : Type {};
+
+    struct Variable : StringItem {
+        // Type* type;
+    };
     struct Label : StringItem {};
     struct Runtime_Function : StringItem {};
 
@@ -43,14 +55,8 @@ namespace IR{
 
     struct Operator : StringItem {};
 
-    struct Type : IR_Item {};
-
-    struct Void : Type {};
-    struct Int64 : Type {
-        int dimension;
-    };
-    struct Tuple : Type {};
-    struct Code : Type {};
+    
+    typedef std::unordered_map< string, Type* > Type_Map;
 
     struct Instruction {
         vector<IR_Item*> args;
@@ -85,14 +91,26 @@ namespace IR{
     struct Length_I : Instruction {
         string to_L3() override;
     };
+    struct New_Array_I : Instruction {
+        string to_L3() override;
+    };
+    struct New_Tuple_I : Instruction {
+        string to_L3() override;
+    };
     
-    struct Array_Load_I : Instruction {};
-    struct Array_Store_I : Instruction {};
-    struct New_Array_I : Instruction {};
-    struct New_Tuple_I : Instruction {};
-    struct Type_Var_I : Instruction {};
-    
+    struct Array_Load_I : Instruction {
+        string to_L3() override;
+    };
 
+    struct Tuple_Load_I : Instruction {
+        string to_L3() override;
+    };
+    struct Array_Store_I : Instruction {
+        string to_L3() override;
+    };
+    struct Tuple_Store_I : Instruction {
+        string to_L3() override;
+    };
     
     struct BasicBlock {
         Label label;
@@ -106,7 +124,8 @@ namespace IR{
         Type returnType;
         Label name;
         vector<Parameter> parameters;
-        vector<BasicBlock*> basicBlocks;
+        vector<BasicBlock*> basicBlocks;        
+        Type_Map type_map;
         string to_L3();
     };
 

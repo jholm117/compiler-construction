@@ -142,7 +142,7 @@ namespace IR {
             TAOCPP_PEGTL_STRING(">="),
             TAOCPP_PEGTL_STRING(">")
         >{};
-
+    
     struct parameter_rule:
         pegtl::seq<
             seps,
@@ -151,6 +151,18 @@ namespace IR {
             variable_rule,
             seps
         >{};
+
+    struct parameters_rule:
+        pegtl::seq<
+            parameter_rule,
+            pegtl::star<
+                pegtl::seq<
+                    pegtl::one< ',' >,
+                    parameter_rule
+                >
+            >
+        >{};
+
 
     struct conditional_branch_i:
         pegtl::seq<
@@ -385,7 +397,8 @@ namespace IR {
             seps,
             one< '(' >,
             seps,
-            pegtl::star< parameter_rule >,
+            pegtl::opt< parameters_rule >,
+            seps,
             one< ')' >,
             seps,
             one< '{' >,
@@ -408,19 +421,9 @@ namespace IR {
         parsedItems.push_back(i);
     }
 
-    // IR_OperatorType parseOperator(std::string str){
-    //     if(str == "+") return PLUS;
-    //     if(str == "-") return MINUS;
-    //     if(str == "*") return STAR;
-    //     if(str == "") return AND;
-    //     if(str == "") return SHIFT_LEFT;
-    //     if(str == "") return SHIFT_RIGHT;
-    //     if(str == "") return LESS_THAN;
-    //     if(str == "") return LESS_THAN_EQ;
-    //     if(str == "") return EQ;
-    //     if(str == "") return GREATER_THAN;
-    //     if(str == ">=") return GREATER_THAN_EQ;
-    // }
+    void addToVarMap(Variable* v, Type* t, Program & p ){
+        p.functions.back()->type_map.emplace(v->name, t);
+    }
 
     /*
     *   IR_Item Actions
@@ -430,6 +433,7 @@ namespace IR {
         template< typename Input >
         static void apply( const Input & in, IR::Program & p){
             // cout << in.string() << endl;
+            
             cacheStringItem(new Variable(), in.string().substr(1));
         }
     };
@@ -564,7 +568,9 @@ namespace IR {
         template< typename Input >
         static void apply( const Input & in, IR::Program & p){
             // cout << in.string() << endl;
-            instructionAction(new Type_Var_I(), p);
+            Variable* var = dynamic_cast<Variable*>(utils::pop_item(parsedItems));
+            Type* type = dynamic_cast<Type*>(utils::pop_item(parsedItems));
+            addToVarMap(var, type, p);
         }
     };
 
@@ -580,7 +586,10 @@ namespace IR {
         template< typename Input >
         static void apply( const Input & in, IR::Program & p){
             // cout << in.string() << endl;
-            instructionAction(new Array_Load_I(), p);
+            auto var = parsedItems[1]->name;
+            auto type = p.functions.back()->type_map.at(var);
+            if( dynamic_cast<Tuple*>(type) ) instructionAction( new Tuple_Load_I(), p );
+            else instructionAction( new Array_Load_I(), p);
         }
     };
 
@@ -588,7 +597,10 @@ namespace IR {
         template< typename Input >
         static void apply( const Input & in, IR::Program & p){
             // cout << in.string() << endl;
-            instructionAction(new Array_Store_I(), p);
+            auto var = parsedItems[0]->name;
+            auto type = p.functions.back()->type_map.at(var);
+            if( dynamic_cast<Tuple*>(type) ) instructionAction( new Tuple_Store_I(), p );
+            else instructionAction( new Array_Store_I(), p);
         }
     };
 
@@ -656,6 +668,8 @@ namespace IR {
             // cout << in.string() << endl;
             Variable* var_cast = dynamic_cast<Variable*>(utils::pop_item(parsedItems));
             Type* type_cast = dynamic_cast<Type*>(utils::pop_item(parsedItems));
+
+            addToVarMap(var_cast, type_cast, p);
 
             IR::Parameter param ( type_cast, *var_cast );
 

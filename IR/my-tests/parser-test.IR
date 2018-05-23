@@ -40,6 +40,11 @@ define tuple :myF (code %v1 int64 %v2 tuple %v3 ){
 
 define void :myF2 (){
     :entry
-    %v2 <- call :myF (7, 2) 
+    //%v2 <- call :myF (7, 2)
+    //%t <- new Tuple(7)
+
+    %a <- new Array(4)
+    //%b <- new Array(2,3, 4)
+    
     return
 }
