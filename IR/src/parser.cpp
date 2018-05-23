@@ -58,22 +58,6 @@ namespace IR {
             >
         >{};
 
-    struct keyword:
-        pegtl::sor<
-            TAOCPP_PEGTL_STRING("return"),
-            TAOCPP_PEGTL_STRING("call"),
-            TAOCPP_PEGTL_STRING("br"),
-            TAOCPP_PEGTL_STRING("length"),
-            TAOCPP_PEGTL_STRING("Array"),
-            TAOCPP_PEGTL_STRING("print"),
-            TAOCPP_PEGTL_STRING("array-error"),
-            TAOCPP_PEGTL_STRING("new"),
-            TAOCPP_PEGTL_STRING("define"),
-            TAOCPP_PEGTL_STRING("tuple"),
-            TAOCPP_PEGTL_STRING("code"),
-            TAOCPP_PEGTL_STRING("Tuple")           
-        > {};
-
     struct variable_rule:
         pegtl::seq<
             pegtl::one< '%' >,
@@ -136,8 +120,8 @@ namespace IR {
             TAOCPP_PEGTL_STRING("&"),
             TAOCPP_PEGTL_STRING("<<"),
             TAOCPP_PEGTL_STRING(">>"),
-            TAOCPP_PEGTL_STRING("<"),
             TAOCPP_PEGTL_STRING("<="),
+            TAOCPP_PEGTL_STRING("<"),
             TAOCPP_PEGTL_STRING("="),
             TAOCPP_PEGTL_STRING(">="),
             TAOCPP_PEGTL_STRING(">")

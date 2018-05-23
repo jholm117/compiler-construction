@@ -26,7 +26,7 @@ namespace IR {
     const string EIGHT = "8";
     const string SIXTEEN = "16";
     const string PLUS = " + ";
-    const string LOAD = "load";
+    const string LOAD = "load ";
     const string STORE = "store ";
     const string NEW_LINE_TAB = "\n\t";
     const string ONE = "1";
@@ -34,6 +34,7 @@ namespace IR {
     const string CALL_ALLOCATE = "call allocate(";
     const string SHIFT_RIGHT = " >> ";
     const string SHIFT_LEFT = " << ";
+    const string ZERO = "0";
 
     void printParsedItems(Program & p){
         for (auto f : p.functions){
@@ -77,7 +78,7 @@ namespace IR {
         s += NEW_LINE_TAB + v0 + ARROW + ARG(2) + STAR + EIGHT;
         s += NEW_LINE_TAB + v1 + ARROW + v0 + PLUS + SIXTEEN;
         s += NEW_LINE_TAB + v2 + ARROW + ARG(1) + PLUS + v1;
-        s += NEW_LINE_TAB + ARG(0) + ARROW + LOAD + SPACE + v2;
+        s += NEW_LINE_TAB + ARG(0) + ARROW + LOAD + v2;
         return s;
     }
 
@@ -132,8 +133,49 @@ namespace IR {
         return s;
     }
 
+    string calculateArrayOffset(string & arr_name, string & offset, vector<IR_Item*> & indices){
+        auto B = 16 + indices.size() * 8;
+        string s;
+        int dimension_offset = 24;
+        vector<string> dimension_lengths;
+        auto it = indices.begin();
+        for(++it; it != indices.end(); ++it){
+            auto ADDR_M = new_var_name();
+            auto M_ = new_var_name();
+            auto M = new_var_name();
+            dimension_lengths.push_back(M);
+            s += NEW_LINE_TAB + ADDR_M + ARROW + arr_name + PLUS + to_string(dimension_offset);
+            s += NEW_LINE_TAB + M_ + ARROW + LOAD + ADDR_M;
+            s += NEW_LINE_TAB + M + ARROW + M_ + SHIFT_RIGHT + ONE;   
+            dimension_offset += 8;
+        }
+
+        auto L3_index = new_var_name();
+        s += NEW_LINE_TAB + L3_index + ARROW + ZERO;
+        for (int i =0; i < indices.size(); ++i){
+            auto index = indices[i];
+            auto accum = new_var_name();
+            s += NEW_LINE_TAB + accum + ARROW + index->name;
+            for(int j =i; j < dimension_lengths.size(); ++j){
+                s += NEW_LINE_TAB + accum + ARROW + accum + STAR + dimension_lengths[j];
+            }
+            s += NEW_LINE_TAB + L3_index + ARROW + L3_index + PLUS + accum;
+        }
+        auto offsetAfterB = new_var_name();
+        s += NEW_LINE_TAB + offsetAfterB + ARROW + L3_index + STAR + EIGHT;
+        s += NEW_LINE_TAB + offset + ARROW + offsetAfterB + PLUS + to_string(B);
+        return s;
+    }
+
     string Array_Load_I::to_L3(){
-        return "";
+        auto offset = new_var_name();
+        auto addr = new_var_name();
+        auto indices = utils::subvector(this->args, 2, this->args.size());
+        string s;
+        s += calculateArrayOffset(ARG(1), offset, indices);
+        s += NEW_LINE_TAB + addr + ARROW + ARG(1) + PLUS + offset;
+        s += NEW_LINE_TAB + ARG(0) + ARROW + LOAD + addr; 
+        return s;
     }
 
     string tuple_offset(string & index){
@@ -145,12 +187,20 @@ namespace IR {
         auto offset = tuple_offset(ARG(2));
         string s;
         s += NEW_LINE_TAB + v1 + ARROW + ARG(1) + PLUS + offset;
-        s += NEW_LINE_TAB + ARG(0) + ARROW + LOAD + SPACE + v1;
+        s += NEW_LINE_TAB + ARG(0) + ARROW + LOAD + v1;
         return s;
     }
 
     string Array_Store_I::to_L3(){
-        return "";
+        auto offset = new_var_name();
+        auto addr = new_var_name();
+        auto src_index = this->args.size()-1;
+        auto indices = utils::subvector(this->args, 1, src_index);
+        string s;
+        s += calculateArrayOffset(ARG(0), offset, indices);
+        s += NEW_LINE_TAB + addr + ARROW + ARG(0) + PLUS + offset;
+        s += NEW_LINE_TAB + STORE + addr + ARROW + ARG(src_index); 
+        return s;
     }
 
     string Tuple_Store_I::to_L3(){

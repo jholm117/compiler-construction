@@ -6,3 +6,12 @@ define void :main () {
     %t <- %v[0]
     return
 }
+
+define void :arrays () {
+    :entry
+    int64[] %myArr
+    //%myArr <- new Array(7)
+    %myArr[3][7] <- 5
+    //%v1 <- %myArr[8][7]
+    return
+}
