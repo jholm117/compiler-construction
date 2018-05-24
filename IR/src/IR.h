@@ -23,35 +23,17 @@ namespace IR{
     struct Type : IR_Item {};
 
     struct Void : Type {};
-    struct Int64 : Type {
-        int dimension;
-    };
+    struct Int64 : Type {};
     struct Tuple : Type {};
     struct Code : Type {};
 
-    struct Variable : StringItem {
-        // Type* type;
-    };
+    struct Variable : StringItem {};
     struct Label : StringItem {};
     struct Runtime_Function : StringItem {};
 
     struct Number : IR_Item {
         int value;
     };
-
-    // enum IR_OperatorType {
-    //     PLUS,
-    //     MINUS,
-    //     STAR,
-    //     AND,
-    //     SHIFT_LEFT,
-    //     SHIFT_RIGHT,
-    //     LESS_THAN,
-    //     LESS_THAN_EQ,
-    //     EQ,
-    //     GREATER_THAN,
-    //     GREATER_THAN_EQ
-    // };
 
     struct Operator : StringItem {};
 

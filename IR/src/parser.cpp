@@ -485,7 +485,6 @@ namespace IR {
             // cout << in.string() << endl;
             auto t = new Int64();
             t->name = in.string();
-            t->dimension = std::count(in.string().begin(), in.string().end(), '[' );
             parsedItems.push_back(t);
         }
     };

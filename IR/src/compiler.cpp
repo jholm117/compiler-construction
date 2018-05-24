@@ -19,12 +19,12 @@ void print_to_console(string & p){
 }
 
 int main( int argc, char **argv ) {
-
+    // cout << "before parse" << endl;
     IR::Program p = IR::parseFile(argv[optind]);
 
-
+    // cout << "before gen code" << endl;
     string L3_p = IR::generate_code(p);
-
+    // cout << "done gen code" << endl;
     if(argc == 3 && argv[2][1] == 'c'){
         print_to_console(L3_p);
     } else {

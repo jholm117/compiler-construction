@@ -269,6 +269,7 @@ namespace IR {
     string BasicBlock::to_L3(){
         string bb = NEW_LINE_TAB + this->label.name;
         for(auto i : this->instructions){
+            // cout << i->to_L3() << endl;
             bb += i->to_L3();
         }
         return bb;
