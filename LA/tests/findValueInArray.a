@@ -6,6 +6,7 @@ void main ( ){
 	int64 %v7
 	int64 %v11
 	int64 %v13
+	int64 %v15
 	int64 %v17
 
 	%v1 <- 1

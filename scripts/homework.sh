@@ -38,8 +38,13 @@ for i in `ls` ; do
 done
 find ./ -empty -type d -delete ;
 
+# Change permissions
+chmod 644 */src/*.cpp ;
+chmod 644 */src/*.hpp ;
+chmod 644 */src/*.h ;
+
 # Create the package
-echo "SIGNATURE = 4903ufjdsk:" > signature.txt ;
+echo "SIGNATURE = fdsfjk" > signature.txt ;
 tar cfj ../${dirName}.tar.bz2 ./ ;
 cd ../ ;
 mv ${dirName}.tar.bz2 "${origDir}"/ ;

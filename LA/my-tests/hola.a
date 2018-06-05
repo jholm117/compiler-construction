@@ -1,0 +1,6 @@
+void main(){
+	int64 %a
+	int64 %v1
+	call printExistance(%a, %v1)
+	return
+}
