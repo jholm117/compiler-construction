@@ -1,10 +1,11 @@
 define void :main() {
   :entry
-  %ar <- 1
+  int64[][][] %ar
+  int64 %r
+
   %ar <- new Array(5,7,9)
   %ar[1][2][3] <- 7
 
-  %r <- 1
   %r <- call :findVal(%ar,7)
 
   call print(%r)
@@ -16,6 +17,15 @@ define void :main() {
 define int64 :findVal(int64[][][] %A, int64 %v) {
   :entry
   call print(1)
+
+  int64 length0
+  int64 length1
+  int64 length2
+  int64 %i
+  int64 %j
+  int64 %k
+  int64 %temp
+  int64 %check
 
   %length0 <- length %A 0
   %length0 <- %length0 >> 1

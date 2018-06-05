@@ -6,6 +6,7 @@ CC        := g++
 CC_CLASS  := LBc
 PL_CLASS  := LB
 EXT_CLASS := b
+OPT_LEVEL := -O3
 
 all: dirs $(PL_CLASS)
 
@@ -33,7 +34,7 @@ test: dirs $(PL_CLASS)
 	../scripts/test.sh $(EXT_CLASS) $(CC_CLASS)
 
 performance: dirs $(PL_CLASS)
-	if ! test -f ./a.out ; then ./$(CC_CLASS) tests/competition.$(EXT_CLASS) ; fi ; /usr/bin/time -f'%E' ./a.out
+	if ! test -f ./a.out ; then ./$(CC_CLASS) $(OPT_LEVEL) tests/competition2018.$(EXT_CLASS) ; fi ; /usr/bin/time -f'%E' ./a.out
 
 clean:
 	rm -fr bin obj *.out prog.* *.o core.* `find tests -iname *.tmp`

@@ -1,6 +1,7 @@
 define void :main ( ){
 
   :entry
+  int64[] %ar
   %ar <- new Array(3)
   return
 
