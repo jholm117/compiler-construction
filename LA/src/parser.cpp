@@ -269,8 +269,6 @@ namespace LA {
             >
         > {};
 
-    struct function_callee_rule:
-        name {};
 
     struct runtime_callee_rule:
         pegtl::sor<
@@ -278,12 +276,38 @@ namespace LA {
             TAOCPP_PEGTL_STRING("allocate"),
             TAOCPP_PEGTL_STRING("array-error")
         >{};
+
+    struct function_callee_rule:
+        name{}; 
+
+    struct open_paren:
+        pegtl::seq< 
+            seps,
+            one< '(' >
+        >{};
+
     
     struct callee_rule:
         pegtl::sor<
-            runtime_callee_rule,
-            variable_rule,
-            function_callee_rule
+            pegtl::seq<
+                pegtl::at<
+                    pegtl::seq<
+                        runtime_callee_rule,
+                        open_paren
+                    >
+                >,
+                runtime_callee_rule
+            >,
+            pegtl::seq<
+                pegtl::at<
+                    pegtl::seq<
+                        function_callee_rule,
+                        open_paren
+                    >
+                >,
+                function_callee_rule
+            >,
+            variable_rule
         >{};
 
     struct call_rule:

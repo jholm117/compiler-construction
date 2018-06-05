@@ -268,13 +268,19 @@ namespace LA {
             vector<Instruction*> new_Insts;
             for(auto i : f->instructions){
                 // cout << "1" << endl;
-                if(dynamic_cast<Array_Load_I*>(i) || dynamic_cast<Tuple_Load_I*>(i)){
+                if(dynamic_cast<Tuple_Load_I*>(i)){                    
+                    auto arr = dynamic_cast<Variable*>(i->args.at(1));
+                    check_allocation(arr, new_Insts);
+                } else if (dynamic_cast<Tuple_Store_I*>(i)){
+                    auto arr = dynamic_cast<Variable*>(i->args.at(0));
+                    check_allocation(arr, new_Insts);
+                } else if(dynamic_cast<Array_Load_I*>(i)){
                     // cout << "2" << endl;
                     auto dims = utils::subvector(i->args, 2, i->args.size());
                     auto arr = dynamic_cast<Variable*>(i->args.at(1));
                     check_allocation(arr, new_Insts);
                     check_in_range(arr, dims, new_Insts);
-                } else if (dynamic_cast<Array_Store_I*>(i) || dynamic_cast<Tuple_Store_I*>(i)){
+                } else if (dynamic_cast<Array_Store_I*>(i)){
                     // cout << "3" << endl;
                     auto dims = utils::subvector(i->args, 1, i->args.size()-1);
                     auto arr = dynamic_cast<Variable*>(i->args.at(0));

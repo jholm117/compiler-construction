@@ -1,5 +1,6 @@
 void main(){
+	int64 %a
 	int64 %v1
-	%v1 <- 3 + 4
+	call printExistance(%a, %v1)
 	return
 }
